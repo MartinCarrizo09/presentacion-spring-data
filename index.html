@@ -1,0 +1,1356 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Spring Data · 29/09</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --papel:#f6f3ec; --blanco:#ffffff; --tinta:#14161f; --gris:#5b6072; --suave:#8a8fa3; --linea:#d9d4c7; --linea2:#e9e5da;
+  --cli:#64748b; --mvc:#7c3aed; --ctl:#2563eb; --srv:#0e8fa8; --rep:#0f9d6b; --orm:#c58a06; --bd:#e2571b; --err:#d9253a;
+  --acento:#2f2bd9; --ok:#0f9d6b; --mal:#d9253a;
+  --f-tit:"Space Grotesk",system-ui,"Segoe UI",sans-serif;
+  --f-txt:"Inter",system-ui,"Segoe UI",sans-serif;
+  --f-cod:"JetBrains Mono",ui-monospace,Consolas,monospace;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:#1c1d24;overflow:hidden;font-family:var(--f-txt);color:var(--tinta)}
+#escenario{position:fixed;inset:0;overflow:hidden}
+#lienzo{width:1600px;height:900px;position:absolute;left:50%;top:50%;transform-origin:center center;background:var(--papel);overflow:hidden;box-shadow:0 20px 80px rgba(0,0,0,.4)}
+.slide{position:absolute;inset:0;padding:70px 90px 80px;opacity:0;pointer-events:none;transition:opacity .45s ease}
+.slide.activa{opacity:1;pointer-events:auto}
+/* fondo de puntos */
+.puntos{background-image:radial-gradient(#d8d2c3 1.3px,transparent 1.3px);background-size:26px 26px}
+.kicker{font:700 17px var(--f-tit);letter-spacing:.14em;text-transform:uppercase;color:var(--acento)}
+h1,h2,h3{font-family:var(--f-tit);margin:0;letter-spacing:-.01em}
+h2{font-size:58px;line-height:1.05;margin:10px 0 0}
+.sub{font-size:25px;color:var(--gris);margin-top:14px;max-width:1100px;line-height:1.4}
+code,.mono{font-family:var(--f-cod)}
+.chip{display:inline-flex;align-items:center;gap:8px;font:600 17px var(--f-txt);padding:6px 14px;border:2px solid var(--tinta);background:var(--blanco)}
+.pie{position:absolute;left:90px;right:90px;bottom:28px;display:flex;justify-content:space-between;font:500 15px var(--f-txt);color:var(--suave)}
+.btn{font:700 20px var(--f-tit);border:3px solid var(--tinta);background:var(--tinta);color:#fff;padding:12px 26px;cursor:pointer;box-shadow:6px 6px 0 var(--acento);transition:transform .1s,box-shadow .1s}
+.btn:hover{transform:translate(-2px,-2px);box-shadow:8px 8px 0 var(--acento)}
+.btn:active{transform:translate(3px,3px);box-shadow:2px 2px 0 var(--acento)}
+.btn.claro{background:var(--blanco);color:var(--tinta)}
+.btn:disabled{opacity:.35;cursor:default;transform:none}
+.oculto{visibility:hidden}
+.entra{animation:entra .5s ease both}
+@keyframes entra{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
+
+/* ---------- navegación ---------- */
+#barra{position:fixed;left:0;bottom:0;height:5px;background:var(--acento);transition:width .4s;z-index:5}
+#nav{position:fixed;right:16px;bottom:14px;display:flex;gap:6px;align-items:center;z-index:5;opacity:.25;transition:opacity .2s}
+#nav:hover{opacity:1}
+#nav button{border:0;background:#fff;color:#14161f;font:700 14px var(--f-txt);padding:7px 11px;cursor:pointer}
+#nav span{color:#fff;font:600 13px var(--f-txt);padding:0 6px}
+
+/* ---------- 1 portada ---------- */
+#s-portada{padding:0}
+.portada-izq{position:absolute;left:0;top:0;bottom:0;width:980px;padding:110px 90px}
+.portada-izq h1{font-size:112px;line-height:.95;margin-top:26px}
+.portada-izq h1 span{color:var(--acento)}
+.portada-izq p{font-size:28px;color:var(--gris);margin-top:34px;line-height:1.35;max-width:760px}
+.portada-der{position:absolute;right:0;top:0;bottom:0;width:620px;background:var(--tinta);overflow:hidden}
+.bloque{position:absolute;display:grid;place-items:center;font:700 26px var(--f-cod);color:#fff}
+.portada-meta{position:absolute;left:90px;bottom:70px;display:flex;gap:14px}
+
+/* ---------- 2 agenda ---------- */
+.agenda{display:grid;grid-template-columns:repeat(8,1fr);gap:0;margin-top:70px;border:3px solid var(--tinta);background:var(--blanco)}
+.agenda > div{padding:28px 18px 40px;border-right:3px solid var(--tinta);position:relative;min-height:480px;display:flex;flex-direction:column}
+.agenda > div:last-child{border-right:0}
+.agenda .hora{font:700 20px var(--f-cod)}
+.agenda .num{font:700 110px var(--f-tit);color:var(--c);line-height:1;margin:24px 0 auto}
+.agenda b{font:700 25px var(--f-tit);display:block;line-height:1.15}
+.agenda small{display:block;color:var(--gris);font-size:18px;margin-top:8px;min-height:48px}
+.agenda .franja{position:absolute;left:0;right:0;bottom:0;height:12px;background:var(--c)}
+
+/* ---------- qué es / para qué sirve / quién crea ---------- */
+.frase-grande{font:600 38px/1.3 var(--f-tit);margin-top:26px;max-width:1350px}
+.frase-grande b{color:var(--acento)}
+.cadena{display:flex;align-items:stretch;margin-top:80px}
+.eslabon{flex:1;min-height:250px;background:var(--blanco);border:3px solid var(--tinta);padding:38px 22px 24px;position:relative;transition:transform .35s,box-shadow .35s,opacity .35s}
+.eslabon .quien{position:absolute;top:-17px;left:16px;font:700 15px var(--f-tit);padding:5px 12px;color:#fff;background:var(--c);letter-spacing:.04em}
+.eslabon b{font:700 31px/1.15 var(--f-tit);display:block}
+.eslabon small{display:block;color:var(--gris);font-size:21px;margin-top:10px;line-height:1.35}
+.eslabon.brilla{transform:translate(-4px,-4px);box-shadow:10px 10px 0 var(--c)}
+.eslabon.opaco{opacity:.3}
+.flechita{flex:0 0 54px;display:grid;place-items:center;font:700 34px var(--f-tit);color:var(--suave)}
+.codigo-chip{margin-top:44px;font:25px var(--f-cod);background:#101218;color:#e8ebf5;padding:18px 26px;border:3px solid var(--tinta);display:inline-block;transition:opacity .4s}
+.codigo-chip .kw{color:#b69cff} .codigo-chip .ty{color:#7fd6e8}
+.nota-grande{margin-top:18px;font-size:25px;color:var(--gris);transition:opacity .4s}
+.nota-grande b{color:var(--rep)}
+.usos{display:grid;grid-template-columns:repeat(3,1fr);gap:26px;margin-top:56px}
+.uso{background:var(--blanco);border:3px solid var(--tinta);border-top:14px solid var(--c);padding:26px 28px;min-height:380px;display:flex;flex-direction:column;gap:16px;transition:opacity .4s,transform .4s}
+.uso .n{font:700 64px var(--f-tit);color:var(--c);line-height:1}
+.uso b{font:700 31px/1.15 var(--f-tit)}
+.uso .pills{display:flex;flex-wrap:wrap;gap:8px}
+.uso .pills code{font-size:19px;background:var(--papel);border:2px solid var(--linea);padding:4px 10px}
+.uso .antes{font:21px/1.5 var(--f-cod);background:var(--papel);border:2px dashed var(--linea);padding:12px 14px}
+.uso .antes em{font-style:normal;color:var(--acento);font-weight:700}
+.uso small{font-size:19px;color:var(--gris);line-height:1.35;margin-top:auto}
+.escondido{opacity:0!important;transform:translateY(14px)}
+.banda{margin-top:30px;background:var(--tinta);color:#fff;font:600 30px var(--f-tit);padding:22px 30px;transition:opacity .4s}
+.banda b{color:#b8b5ff}
+.comparar{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:30px;margin-top:40px}
+.lado{min-width:0;background:var(--blanco);border:3px solid var(--tinta);padding:24px 28px;transition:opacity .4s,transform .4s}
+.lado h3{font:700 30px var(--f-tit);display:flex;align-items:center;gap:14px}
+.lado h3 i{font-style:normal;font:700 16px var(--f-tit);color:#fff;padding:5px 12px}
+.lado pre{margin:18px 0 0;font:17.5px/1.6 var(--f-cod);background:var(--papel);border:2px solid var(--linea);padding:16px 18px;white-space:pre;overflow-x:auto}
+.lado pre .nw{background:#ffd9dc;color:var(--mal);font-weight:700;padding:0 3px}
+.lado pre .an{color:var(--orm)} .lado pre .kw{color:#7c3aed} .lado pre .pa{background:#d7f5e8;color:var(--rep);font-weight:700;padding:0 3px}
+.lado p{font-size:21px;color:var(--gris);margin:16px 0 0;line-height:1.4}
+.leyenda-grafo{position:absolute;left:90px;top:188px;display:flex;gap:34px;font-size:19px;color:var(--gris)}
+.leyenda-grafo span{display:flex;align-items:center;gap:10px}
+.leyenda-grafo i{display:inline-block}
+.leyenda-grafo .caja{width:30px;height:20px;border:3px solid var(--tinta);border-left:8px solid var(--srv);background:#fff}
+.leyenda-grafo .linea{width:40px;border-top:4px dashed var(--srv)}
+.leyenda-grafo .num{width:26px;height:26px;border-radius:50%;background:var(--ctl);color:#fff;font:700 14px var(--f-tit);display:grid;place-items:center}
+
+/* ---------- 3 contenedor ---------- */
+.grafo{position:absolute;left:90px;top:240px;width:980px;height:600px}
+.grafo svg{position:absolute;inset:0;overflow:visible}
+.col-tit{position:absolute;top:0;font:700 15px var(--f-tit);letter-spacing:.12em;text-transform:uppercase}
+.bn{position:absolute;width:280px;height:84px;background:var(--blanco);border:3px solid var(--tinta);border-left:12px solid var(--c);padding:10px 14px;
+  opacity:0;transform:scale(.85);transition:opacity .45s,transform .45s cubic-bezier(.3,1.6,.5,1),box-shadow .3s}
+.bn.ve{opacity:1;transform:none}
+.bn b{display:block;font:700 21px var(--f-cod)}
+.bn small{display:block;color:var(--gris);font-size:15px;margin-top:4px}
+.bn .n{position:absolute;right:-18px;top:-18px;width:38px;height:38px;border-radius:50%;background:var(--c);color:#fff;display:grid;place-items:center;font:700 18px var(--f-tit)}
+.bn.brilla{box-shadow:0 0 0 8px color-mix(in srgb,var(--c) 30%,transparent)}
+.flecha{fill:none;stroke-width:3.5;stroke-dasharray:8 7;opacity:0;transition:opacity .5s}
+.flecha.ve{opacity:1;animation:fluye 1s linear infinite}
+.flecha.fuerte{stroke-width:6;stroke-dasharray:none}
+@keyframes fluye{to{stroke-dashoffset:-30}}
+.terminal{position:absolute;right:90px;top:240px;width:420px;background:#101218;color:#d8dcea;font:15px/1.65 var(--f-cod);padding:18px 20px;height:320px;white-space:pre;overflow:hidden;border:3px solid var(--tinta)}
+.terminal .t{color:#8b90a8}
+.terminal .l{opacity:0;transition:opacity .3s}
+.terminal .l.ve{opacity:1}
+.pregunta{position:absolute;right:90px;top:585px;width:420px;background:var(--blanco);border:3px solid var(--tinta);padding:20px 22px;box-shadow:8px 8px 0 var(--acento)}
+.pregunta p{margin:0;font:700 26px/1.2 var(--f-tit)}
+.pregunta .resp{margin-top:14px;font-size:19px;color:var(--gris);line-height:1.35}
+.pregunta .resp b{color:var(--ok)}
+
+/* ---------- 4 evolución ---------- */
+.estaciones{display:flex;gap:0;margin-top:34px;border:3px solid var(--tinta)}
+.estaciones > div{flex:1;padding:14px 20px;background:var(--blanco);border-right:3px solid var(--tinta);cursor:pointer;transition:background .2s,color .2s}
+.estaciones > div:last-child{border-right:0}
+.estaciones > div.on{background:var(--tinta);color:#fff}
+.estaciones small{display:block;font:700 14px var(--f-cod);opacity:.7}
+.estaciones b{font:700 22px var(--f-tit)}
+.editor{position:absolute;left:90px;top:300px;width:1060px;height:480px;background:var(--blanco);border:3px solid var(--tinta);display:flex;flex-direction:column}
+.editor .tabs{height:40px;border-bottom:3px solid var(--tinta);display:flex;align-items:center;gap:10px;padding:0 16px;font:600 15px var(--f-cod);color:var(--gris)}
+.editor .tabs i{width:12px;height:12px;border-radius:50%;background:var(--linea)}
+.codigo{flex:1;padding:14px 0;font:17px/1.55 var(--f-cod);overflow:auto;position:relative;scrollbar-width:auto;scrollbar-color:#b7b2a4 #f3f0e8}
+.codigo::-webkit-scrollbar{width:14px;height:14px}.codigo::-webkit-scrollbar-thumb{background:#b7b2a4;border:3px solid #f3f0e8}.codigo::-webkit-scrollbar-track{background:#f3f0e8}
+.codigo .ln.marca{background:#fff1bf;box-shadow:inset 6px 0 0 #e0a800}
+.editor .tabs .ley{margin-left:auto;display:flex;align-items:center;gap:8px;color:var(--gris)}
+.editor .tabs .ley i{width:18px;height:14px;background:#fff1bf;box-shadow:inset 5px 0 0 #e0a800;border-radius:0}
+.codigo .ln{display:flex;white-space:pre;min-height:26.35px;padding-right:18px;width:max-content;min-width:100%}
+.codigo .nro{width:52px;text-align:right;padding-right:16px;color:#b7b2a4;flex:none}
+.codigo .txt{flex:none}
+.codigo .cursor{display:inline-block;width:10px;height:22px;background:var(--acento);vertical-align:-4px;animation:parpadea .8s steps(1) infinite}
+@keyframes parpadea{50%{opacity:0}}
+.kw{color:#7c3aed;font-weight:600} .ty{color:#0e8fa8} .st{color:#0f9d6b} .cm{color:#9a9585;font-style:italic} .an{color:#c58a06}
+.notas{position:absolute;left:1180px;top:300px;width:330px;height:420px;display:flex;flex-direction:column;gap:12px}
+.nota{background:var(--blanco);border:3px solid var(--tinta);border-left:12px solid var(--acento);padding:12px 16px;font-size:18px;line-height:1.35;opacity:0;transform:translateX(20px);transition:all .4s}
+.nota.ve{opacity:1;transform:none}
+.nota b{font-family:var(--f-cod);font-size:15px;color:var(--acento);display:block}
+.contador{position:absolute;right:90px;bottom:26px;display:flex;align-items:baseline;gap:14px}
+.contador .num{font:700 78px var(--f-tit);line-height:1;color:var(--acento)}
+.contador small{font-size:19px;color:var(--gris);order:-1}
+.accion{position:absolute;left:90px;bottom:36px;display:flex;gap:16px;align-items:center}
+.accion span{font-size:18px;color:var(--gris)}
+
+/* ---------- 5 viaje ---------- */
+.escenarios{display:flex;flex-wrap:wrap;gap:10px;margin-top:22px}
+.escenarios button{font:700 17px var(--f-cod);padding:9px 14px;border:3px solid var(--tinta);background:var(--blanco);cursor:pointer}
+.escenarios button .v{padding:2px 7px;margin-right:6px;color:#fff}
+.escenarios button.on{background:var(--tinta);color:#fff;box-shadow:5px 5px 0 var(--acento)}
+#mapa{position:absolute;left:40px;top:280px;width:1520px;height:440px}
+.nodo circle.cuerpo{stroke-width:4;transition:opacity .4s,fill .4s}
+.nodo text{font-family:var(--f-tit);text-anchor:middle;pointer-events:none}
+.nodo .tag{font-size:30px;font-weight:700}
+.nodo .nom{font-size:21px;font-weight:700;fill:var(--tinta)}
+.nodo .rol{font-size:15px;fill:var(--gris);font-family:var(--f-txt)}
+.nodo.apagado{opacity:.16}
+.nodo .anillo{fill:none;stroke-width:6;opacity:0;transition:opacity .3s}
+.nodo.actual .anillo{opacity:1;animation:pulso 1.3s ease-in-out infinite}
+@keyframes pulso{50%{stroke-width:14;opacity:.35}}
+.nodo.fallo circle.cuerpo{stroke:var(--mal)!important;stroke-width:7}
+.arista{fill:none;stroke:#c9c3b3;stroke-width:3;stroke-dasharray:6 8}
+.arista.usada{stroke:#8f8a7b}
+.leyenda-nousa{font:600 14px var(--f-txt);fill:var(--suave)}
+.caja-paso{position:absolute;left:90px;right:90px;bottom:36px;height:150px;display:grid;grid-template-columns:120px 1fr auto;gap:28px;align-items:center;
+  background:var(--blanco);border:3px solid var(--tinta);padding:0 30px}
+.caja-paso .nro{font:700 72px var(--f-tit);color:var(--c,var(--acento));line-height:1}
+.caja-paso .tt{font:700 34px var(--f-tit);line-height:1.1}
+.caja-paso .dd{font-size:21px;color:var(--gris);margin-top:6px}
+.caja-paso code{display:inline-block;margin-top:8px;font-size:18px;background:var(--papel);padding:4px 10px;border:2px solid var(--linea)}
+.puntitos{display:flex;gap:7px;flex-wrap:wrap;max-width:260px;justify-content:flex-end}
+.puntitos i{width:14px;height:14px;border:2px solid var(--tinta);background:var(--blanco)}
+.puntitos i.hecho{background:var(--tinta)}
+.resultado{position:absolute;font:700 64px var(--f-tit);padding:6px 22px;color:#fff;border:4px solid var(--tinta);box-shadow:8px 8px 0 var(--tinta);opacity:0;transform:scale(.6) rotate(-4deg);transition:all .4s cubic-bezier(.3,1.6,.5,1)}
+.resultado.ve{opacity:1;transform:rotate(-4deg)}
+
+/* ---------- 6 roles ---------- */
+.roles{display:grid;grid-template-columns:repeat(3,1fr);gap:22px;margin-top:40px}
+.rolc{background:var(--blanco);border:3px solid var(--tinta);padding:22px 24px;position:relative;min-height:190px}
+.rolc .tag{position:absolute;right:18px;top:16px;width:64px;height:64px;border-radius:50%;background:var(--c);color:#fff;display:grid;place-items:center;font:700 19px var(--f-tit)}
+.rolc h3{font-size:32px}
+.rolc .es{font:600 16px var(--f-cod);color:var(--c);margin-top:2px}
+.rolc p{font-size:19px;margin:12px 0 0;line-height:1.35;color:var(--gris);max-width:360px}
+.rol-cliente{margin-top:26px;font-size:21px;color:var(--gris)}
+
+/* ---------- 7/8 pedidos ---------- */
+.pedido{margin-top:34px;display:grid;grid-template-columns:640px 1fr;gap:40px}
+.carta{background:var(--blanco);border:3px solid var(--tinta);box-shadow:10px 10px 0 var(--tinta);padding:26px 30px;transform:rotate(-1.2deg)}
+.carta .verbo{font:700 34px var(--f-cod)}
+.carta pre{font:20px/1.55 var(--f-cod);margin:16px 0 0;background:var(--papel);padding:16px 18px;border:2px dashed var(--linea)}
+.preg-grande{font:700 44px/1.1 var(--f-tit)}
+.recorrido{position:absolute;left:90px;right:90px;bottom:50px;display:flex;align-items:stretch;gap:0}
+.parada{flex:1;border:3px solid var(--tinta);margin-left:-3px;background:var(--blanco);padding:14px 14px 16px;opacity:.28;transition:all .4s}
+.parada .t{font:700 14px var(--f-tit);letter-spacing:.1em;text-transform:uppercase;color:var(--c)}
+.parada b{display:block;font:700 22px var(--f-tit);margin-top:4px}
+.parada small{display:block;font-size:16px;color:var(--gris);margin-top:6px;line-height:1.3;min-height:42px}
+.parada.ve{opacity:1;background:color-mix(in srgb,var(--c) 10%,#fff)}
+.parada.roja{opacity:1;background:#fde8eb;border-color:var(--mal)}
+.parada.nousa{opacity:.12}
+.codigo-final{position:absolute;right:90px;top:330px;font:700 120px var(--f-tit);opacity:0;transition:all .5s cubic-bezier(.3,1.6,.5,1);transform:scale(.5)}
+.codigo-final.ve{opacity:1;transform:scale(1)}
+.votos{display:grid;gap:22px;max-width:520px}
+.voto h4{font:700 30px var(--f-tit);margin:0 0 10px}
+.voto .ops{display:flex;gap:10px;flex-wrap:wrap}
+.voto button{font:600 21px var(--f-tit);padding:10px 18px;border:3px solid var(--tinta);background:var(--blanco);color:var(--tinta);cursor:pointer;transition:all .25s}
+.voto button:hover{background:var(--papel)}
+.voto button.elegida{background:var(--acento);border-color:var(--acento);color:#fff}
+.voto button.bien{background:var(--ok);border-color:var(--ok);color:#fff}
+.voto button.mal{background:#fde8eb;border-color:var(--mal);color:var(--mal);text-decoration:line-through}
+.pista{font-size:21px;color:var(--gris);margin:18px 0 0;max-width:520px}
+
+/* ---------- 9 traductor ---------- */
+.metodo-grande{margin-top:60px;display:flex;gap:10px;flex-wrap:wrap;font:700 50px var(--f-cod)}
+.metodo-grande span{padding:6px 14px;border:3px solid transparent;transition:all .45s}
+.metodo-grande.partido span{border-color:var(--c);background:color-mix(in srgb,var(--c) 12%,#fff);margin:0 8px}
+.traducciones{display:flex;gap:18px;margin-top:26px;font:20px var(--f-cod);flex-wrap:wrap}
+.traducciones > div{border-top:6px solid var(--c);background:var(--blanco);padding:12px 16px;border-left:3px solid var(--tinta);border-right:3px solid var(--tinta);border-bottom:3px solid var(--tinta);opacity:0;transition:opacity .4s}
+.traducciones > div.ve{opacity:1}
+.traducciones small{display:block;font:600 14px var(--f-txt);color:var(--gris);margin-bottom:4px;text-transform:uppercase;letter-spacing:.08em}
+.sql-final{margin-top:30px;background:#101218;color:#e8ebf5;font:24px/1.5 var(--f-cod);padding:22px 28px;border:3px solid var(--tinta);opacity:0;transition:opacity .5s}
+.sql-final.ve{opacity:1}
+.sql-final .k{color:#a78bfa;font-weight:700}
+.probalo{position:absolute;left:90px;right:90px;bottom:40px;display:grid;grid-template-columns:1fr 1fr;gap:24px;opacity:0;transition:opacity .5s}
+.probalo.ve{opacity:1}
+.probalo input{width:100%;font:22px var(--f-cod);padding:14px 16px;border:3px solid var(--tinta);background:var(--blanco);outline:none}
+.probalo .salida{font:18px/1.45 var(--f-cod);background:var(--blanco);border:3px solid var(--tinta);padding:12px 16px;min-height:120px;white-space:pre-wrap}
+.probalo .salida.error{color:var(--mal)}
+
+/* ---------- 10/11 actividades ---------- */
+.pasos4{display:grid;grid-template-columns:repeat(4,1fr);gap:0;margin-top:60px;border:3px solid var(--tinta)}
+.pasos4 > div{background:var(--blanco);padding:30px 26px;border-right:3px solid var(--tinta);min-height:300px}
+.pasos4 > div:last-child{border-right:0}
+.pasos4 .n{font:700 90px var(--f-tit);color:var(--c);line-height:1}
+.pasos4 b{display:block;font:700 28px var(--f-tit);margin-top:14px;line-height:1.15}
+.pasos4 code{display:inline-block;margin-top:14px;font-size:19px;background:var(--papel);padding:5px 10px;border:2px solid var(--linea)}
+.pasos4 small{display:block;font-size:18px;color:var(--gris);margin-top:12px;line-height:1.35}
+.misiones{display:flex;gap:0;margin-top:34px}
+.misiones > div{flex:1;border:3px solid var(--tinta);margin-left:-3px;padding:12px 14px;background:var(--blanco)}
+.misiones .n{font:700 34px var(--f-tit);color:var(--acento)}
+.misiones span{display:block;font-size:16px;color:var(--gris);margin-top:2px;line-height:1.3}
+.misiones > div.des{background:var(--tinta);color:#fff}
+.misiones > div.des span{color:#c9cbe0}
+.misiones > div.des .n{color:#fff}
+
+/* ---------- ¿dónde se rompió? ---------- */
+.escena-caso{font-size:24px;color:var(--gris);margin-top:12px}
+.evidencia{margin-top:22px;background:#101218;color:#e8ebf5;font:18px/1.5 var(--f-cod);padding:20px 24px;border:3px solid var(--tinta);white-space:pre-wrap;word-break:break-word;max-height:270px;overflow:hidden}
+.evidencia .e{color:#ff8a95}
+.capas-opc{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:22px}
+.capas-opc button{font:700 20px var(--f-tit);padding:12px 14px;border:3px solid var(--tinta);background:var(--blanco);color:var(--tinta);cursor:pointer;text-align:left;display:flex;align-items:center;gap:12px;transition:all .25s}
+.capas-opc button .l{flex:none;width:40px;height:40px;border-radius:50%;background:var(--tinta);color:#fff;display:grid;place-items:center;font-size:22px}
+.capas-opc button.elegida{border-color:var(--acento);background:color-mix(in srgb,var(--acento) 12%,#fff)}
+.capas-opc button.elegida .l{background:var(--acento)}
+.capas-opc button.bien{background:var(--ok);color:#fff;border-color:var(--ok)}
+.capas-opc button.bien .l{background:#fff;color:var(--ok)}
+.capas-opc button.mal{background:#fde8eb;color:var(--mal);border-color:var(--mal);text-decoration:line-through}
+.capas-opc button.mal .l{background:var(--mal)}
+.pista-caso{margin-top:16px;font-size:21px;color:var(--gris);opacity:0;transition:opacity .4s}
+.pista-caso.ve{opacity:1}
+.pista-caso b{color:var(--orm);font-family:var(--f-tit)}
+.chat-caso{position:absolute;right:90px;top:66px;font:700 18px var(--f-tit);color:var(--acento);border:3px solid var(--acento);padding:8px 14px;background:var(--blanco)}
+.explica{margin-top:20px;display:grid;grid-template-columns:1fr 1fr;gap:20px;opacity:0;transition:opacity .4s}
+.explica.ve{opacity:1}
+.explica > div{background:var(--blanco);border:3px solid var(--tinta);padding:14px 18px;font-size:19px;line-height:1.4}
+.explica b{font:700 15px var(--f-tit);letter-spacing:.1em;text-transform:uppercase;display:block;margin-bottom:4px}
+.explica pre{margin:6px 0 0;font:15px/1.45 var(--f-cod);white-space:pre-wrap}
+.reglas{display:grid;grid-template-columns:repeat(3,1fr);gap:24px;margin-top:60px}
+.reglas > div{border:3px solid var(--tinta);background:var(--blanco);padding:28px;min-height:250px}
+.reglas .n{font:700 80px var(--f-tit);color:var(--err);line-height:1}
+.reglas b{display:block;font:700 28px var(--f-tit);margin-top:12px}
+.reglas small{display:block;font-size:19px;color:var(--gris);margin-top:10px;line-height:1.35}
+
+/* ---------- cierre ---------- */
+.reinicio{position:absolute;left:90px;bottom:40px;display:flex;align-items:center;gap:18px;font-size:18px;color:var(--gris)}
+.reinicio .btn{font-size:17px;padding:10px 20px}
+.reinicio .btn.armado{background:var(--mal);color:#fff;border-color:var(--mal)}
+.ideas4{display:grid;grid-template-columns:1fr 1fr;gap:28px;margin-top:60px}
+.ideas4 > div{border:3px solid var(--tinta);background:var(--blanco);padding:44px 40px;display:flex;gap:30px;align-items:flex-start;min-height:250px;box-shadow:8px 8px 0 var(--c)}
+.ideas4 .n{font:700 96px var(--f-tit);color:var(--c);line-height:.85}
+.ideas4 b{font:700 38px var(--f-tit);line-height:1.15;display:block}
+.ideas4 small{display:block;font-size:24px;color:var(--gris);margin-top:12px}
+</style>
+</head>
+<body>
+<div id="escenario"><div id="lienzo">
+
+<!-- ============ 1 · PORTADA ============ -->
+<section class="slide puntos" id="s-portada" data-nombre="Portada">
+  <div class="portada-izq">
+    <div class="kicker">Backend de Aplicaciones · martes 29/09</div>
+    <h1>Spring <span>Data</span></h1>
+    <p>Del repositorio que escribían a mano<br>al que escribe Spring.</p>
+    <div class="portada-meta"><span class="chip">Apunte 16 · Spring Data</span><span class="chip">Apunte 17 · Transversales</span></div>
+  </div>
+  <div class="portada-der" id="portadaArte"></div>
+</section>
+
+<!-- ============ 2 · AGENDA ============ -->
+<section class="slide" data-nombre="Hoy">
+  <div class="kicker">Hoy</div>
+  <h2>Menos escuchar, más ver y hacer</h2>
+  <div class="agenda" id="agenda"></div>
+</section>
+
+<!-- ============ ¿QUÉ ES SPRING DATA? ============ -->
+<section class="slide puntos" id="s-quees" data-nombre="Qué es Spring Data">
+  <div class="kicker">Spring Data</div>
+  <h2>¿Qué es?</h2>
+  <p class="frase-grande">Una parte de Spring que <b>escribe por vos</b> el código para guardar y buscar datos en una base.</p>
+  <div class="cadena">
+    <div class="eslabon" data-q="vos" style="--c:var(--acento)"><span class="quien">VOS</span><b>Service</b><small>Tu lógica: le pide datos al repositorio.</small></div>
+    <div class="flechita">→</div>
+    <div class="eslabon" data-q="vos" style="--c:var(--acento)"><span class="quien">VOS</span><b>Repository</b><small>Una interfaz de una línea.</small></div>
+    <div class="flechita">→</div>
+    <div class="eslabon" data-q="spring" style="--c:var(--rep)"><span class="quien">SPRING DATA</span><b>La clase que lo implementa</b><small>save, findById, consultas… Nadie la escribe.</small></div>
+    <div class="flechita">→</div>
+    <div class="eslabon" data-q="jpa" style="--c:var(--orm)"><span class="quien">JPA</span><b>Hibernate</b><small>Traduce a SQL.</small></div>
+    <div class="flechita">→</div>
+    <div class="eslabon" data-q="base" style="--c:var(--bd)"><span class="quien">BASE</span><b>Base de datos</b><small>Tablas y filas.</small></div>
+  </div>
+  <div class="codigo-chip escondido" id="queesCodigo"><span class="kw">public interface</span> <span class="ty">ActorRepository</span> <span class="kw">extends</span> <span class="ty">JpaRepository</span>&lt;<span class="ty">Actor</span>, <span class="ty">Integer</span>&gt; { }</div>
+  <p class="nota-grande escondido" id="queesNota">Esto es todo lo que escribís. <b>La clase que hace el trabajo la genera Spring al arrancar.</b></p>
+</section>
+
+<!-- ============ ¿PARA QUÉ SIRVE? ============ -->
+<section class="slide" id="s-sirve" data-nombre="Para qué sirve">
+  <div class="kicker">Spring Data</div>
+  <h2>¿Para qué sirve?</h2>
+  <div class="usos">
+    <div class="uso escondido" style="--c:var(--rep)"><span class="n">1</span><b>Guardar y buscar, ya hecho</b>
+      <div class="pills"><code>save</code><code>findById</code><code>findAll</code><code>count</code><code>deleteById</code></div>
+      <small>Vienen con JpaRepository. No se programan.</small></div>
+    <div class="uso escondido" style="--c:var(--ctl)"><span class="n">2</span><b>Consultas con solo nombrarlas</b>
+      <div class="antes">findByRating("PG")<br><em>→</em> WHERE rating = 'PG'</div>
+      <small>El nombre del método es la consulta.</small></div>
+    <div class="uso escondido" style="--c:var(--bd)"><span class="n">3</span><b>Cambiar de base sin tocar el código</b>
+      <div class="antes">SQLite hoy<br><em>→</em> PostgreSQL mañana</div>
+      <small>Cambia la configuración, no el repositorio.</small></div>
+  </div>
+  <div class="banda escondido" id="sirveBanda">El repositorio que en el bloque 6 tenía <b>77 líneas</b> ahora es <b>una</b>.</div>
+</section>
+
+<!-- ============ ¿QUIÉN CREA LOS OBJETOS? ============ -->
+<section class="slide puntos" id="s-quien" data-nombre="Quién crea los objetos">
+  <div class="kicker">El contenedor</div>
+  <h2>¿Quién crea los objetos?</h2>
+  <div class="comparar">
+    <div class="lado escondido"><h3><i style="background:var(--mal)">SIN SPRING</i>Los creás vos, en orden</h3>
+<pre>EntityManager em = emf.createEntityManager();
+ActorRepository repo = <span class="nw">new</span> JpaActorRepository(em);
+ActorService service = <span class="nw">new</span> ActorService(repo);
+ActorController ctrl = <span class="nw">new</span> ActorController(service);
+<span style="color:var(--gris)">// ...y lo mismo para las películas</span></pre>
+      <p>Hay que crearlos en el orden justo. Si cambia un constructor, hay que tocar todo esto.</p></div>
+    <div class="lado escondido"><h3><i style="background:var(--rep)">CON SPRING</i>Los pedís en el constructor</h3>
+<pre><span class="an">@Service</span>
+<span class="kw">public class</span> ActorService {
+
+    <span class="kw">public</span> ActorService(<span class="pa">ActorRepository repo</span>) {
+        ...
+    }
+}</pre>
+      <p>Al arrancar, Spring crea cada objeto y le pasa lo que pide. A esos objetos se los llama <b>beans</b>.</p></div>
+  </div>
+  <div class="banda escondido" id="quienBanda">Nadie escribe <b>new</b>: los crea y los conecta el <b>contenedor de Spring</b>.</div>
+</section>
+
+<!-- ============ 3 · CONTENEDOR ============ -->
+<section class="slide puntos" id="s-contenedor" data-nombre="El contenedor en acción">
+  <div class="kicker">El contenedor en acción</div>
+  <h2>Lo que hace Spring al arrancar el videoclub</h2>
+  <div class="leyenda-grafo"><span><i class="caja"></i>un objeto que creó Spring (bean)</span><span><i class="linea"></i>se lo pasó en el constructor</span><span><i class="num">1</i>en qué orden lo creó</span></div>
+  <div class="grafo" id="grafo">
+    <div class="col-tit" style="left:0;color:var(--rep)">Repository</div>
+    <div class="col-tit" style="left:350px;color:var(--srv)">Service</div>
+    <div class="col-tit" style="left:700px;color:var(--ctl)">Controller</div>
+    <svg id="grafoSvg" width="980" height="600"></svg>
+  </div>
+  <div class="terminal" id="terminal"><div class="t">&gt; mvn spring-boot:run</div><div class="t">...</div></div>
+  <div class="pregunta oculto" id="pregBeans"><p>¿Por qué <code>actorRepository</code> se crea antes que <code>actorService</code>?</p><div class="resp oculto" id="respBeans"><b>Porque actorService lo pide en su constructor.</b> Spring crea primero lo que otro necesita. Y cada uno se crea <b>una sola vez</b> (singleton).</div></div>
+</section>
+
+<!-- ============ 4 · YA LO CONSTRUYERON ============ -->
+<section class="slide" id="s-evolucion" data-nombre="Del código a mano a Spring Data">
+  <div class="kicker">Del código a mano a Spring Data</div>
+  <h2 id="evoTitulo">Mismo problema, cada vez menos código</h2>
+  <div class="contador"><div class="num" id="evoNum">—</div><small id="evoNumTxt">líneas escritas a mano</small></div>
+  <div class="estaciones" id="estaciones"></div>
+  <div class="editor"><div class="tabs"><i></i><i></i><i></i><span id="evoArchivo"></span><span class="ley" id="evoLey"><i></i>lo que después hace Spring</span></div><div class="codigo" id="evoCodigo"></div></div>
+  <div class="notas" id="evoNotas"></div>
+  <div class="accion"><button class="btn" id="evoBoton">Dejá que Spring lo haga</button><span>o flecha →</span></div>
+</section>
+
+<!-- ============ 5 · VIAJE ============ -->
+<section class="slide" id="s-viaje" data-nombre="El viaje de un pedido">
+  <div class="kicker">Apunte 17 · capas y responsabilidades</div>
+  <h2>El viaje de un pedido</h2>
+  <div class="escenarios" id="escenarios"></div>
+  <svg id="mapa" viewBox="0 0 1520 440"></svg>
+  <div class="resultado" id="viajeResultado" style="left:70px;top:296px"></div>
+  <div class="caja-paso" id="cajaPaso"><div class="nro" id="pNro">→</div><div><div class="tt" id="pTt">Elegí un pedido y avanzá con la flecha</div><div class="dd" id="pDd">Antes de cada paso: ¿a quién le toca?</div><code id="pCode" class="oculto"></code></div><div class="puntitos" id="pPuntos"></div></div>
+</section>
+
+<!-- ============ 6 · ROLES ============ -->
+<section class="slide puntos" data-nombre="Las capas como personajes">
+  <div class="kicker">Juego · las capas como personajes</div>
+  <h2>Seis capas, seis personajes</h2>
+  <div class="roles" id="roles"></div>
+  <div class="rol-cliente">El <b>Cliente</b> son ustedes. En cada pedido, antes de avanzar, <b>voten en el chat</b>: ¿hasta qué capa llega? ¿qué código vuelve? Regla: nadie se saltea a nadie, y la Cocina <b>no dice códigos</b>: levanta una tarjeta roja.</div>
+</section>
+
+<!-- ============ 7 · PEDIDO 1 ============ -->
+<section class="slide" id="s-pedido1" data-nombre="Pedido 1">
+  <div class="kicker">Pedido 1 · voten en el chat</div>
+  <div class="pedido">
+    <div class="carta"><div class="verbo">POST /api/actores</div><pre>{
+  "firstName": "Ricardo",
+  "lastName": "Darin"
+}</pre></div>
+    <div><div class="votos" data-llega="Base de datos" data-codigo="201"></div></div>
+  </div>
+  <div class="codigo-final" id="final1" style="color:var(--ok)">201</div>
+  <div class="recorrido" id="recorrido1"></div>
+</section>
+
+<!-- ============ 8 · PEDIDO 2 ============ -->
+<section class="slide" id="s-pedido2" data-nombre="Pedido 2">
+  <div class="kicker">Pedido 2 · voten en el chat</div>
+  <div class="pedido">
+    <div class="carta" style="transform:rotate(1.2deg)"><div class="verbo">POST /api/actores</div><pre>{
+  "firstName": "penelope",
+  "lastName": "guiness"
+}</pre></div>
+    <div><div class="votos" data-llega="Base de datos" data-codigo="409"></div><p class="pista">Pista: en la base está como <b>PENELOPE GUINESS</b>, en mayúsculas.</p></div>
+  </div>
+  <div class="codigo-final" id="final2" style="color:var(--mal)">409</div>
+  <div class="recorrido" id="recorrido2"></div>
+</section>
+
+<!-- ============ 9 · TRADUCTOR ============ -->
+<section class="slide puntos" id="s-traductor" data-nombre="Spring Data no es magia">
+  <div class="kicker">Apunte 16 · consultas derivadas</div>
+  <h2>El nombre del método <em style="color:var(--acento);font-style:normal">es</em> la consulta</h2>
+  <div class="metodo-grande" id="metodoGrande"></div>
+  <div class="traducciones" id="traducciones"></div>
+  <div class="sql-final" id="sqlFinal"></div>
+  <div class="probalo" id="probalo">
+    <div><div class="kicker" style="margin-bottom:10px">Probalo en vivo · repositorio de Film</div><input id="probaloInput" value="findByRatingAndLengthGreaterThan" spellcheck="false" autocomplete="off"></div>
+    <div class="salida" id="probaloSalida"></div>
+  </div>
+</section>
+
+<!-- ============ 10 · JUEGO ============ -->
+<section class="slide" data-nombre="Ahora ustedes">
+  <div class="kicker">Ahora ustedes · 10 minutos</div>
+  <h2>El traductor de Spring Data</h2>
+  <div class="pasos4">
+    <div style="--c:var(--mvc)"><div class="n">1</div><b>Descarguen el juego</b><code>Traductor-Spring-Data.html</code><small>Del aula virtual. Se abre con doble clic, en el navegador.</small></div>
+    <div style="--c:var(--ctl)"><div class="n">2</div><b>Explorador</b><small>Escriban nombres de métodos y miren qué SQL arma Spring.</small></div>
+    <div style="--c:var(--srv)"><div class="n">3</div><b>Desafíos</b><small>Un pedido en castellano: escriban el método. 8 niveles.</small></div>
+    <div style="--c:var(--rep)"><div class="n">4</div><b>Rompanlo</b><small>Escriban un nombre mal a propósito. ¿Qué dice el error?</small></div>
+  </div>
+</section>
+
+<!-- ============ 11 · PRÁCTICO ============ -->
+<section class="slide puntos" data-nombre="Práctico">
+  <div class="kicker">Práctico</div>
+  <h2>Videoclub 2026 · actores y películas</h2>
+  <div class="pasos4">
+    <div style="--c:var(--mvc)"><div class="n">1</div><b>Descargar y descomprimir</b><code>videoclub-2026.zip</code></div>
+    <div style="--c:var(--ctl)"><div class="n">2</div><b>En la consola</b><code>mvn spring-boot:run</code><small>La primera vez tarda: descarga dependencias.</small></div>
+    <div style="--c:var(--srv)"><div class="n">3</div><b>Abrir el tablero</b><code>localhost:8080</code></div>
+    <div style="--c:var(--rep)"><div class="n">4</div><b>Misiones</b><small>Cada misión: qué archivo, qué pegar. Reiniciar y "Revisar".</small></div>
+  </div>
+  <div class="misiones">
+    <div><span class="n">0</span><span>Así estaba el ejercicio</span></div>
+    <div><span class="n">1</span><span>De la lista a la base</span></div>
+    <div><span class="n">2</span><span>Buscar por id de verdad</span></div>
+    <div><span class="n">3</span><span>Alta y baja en la base</span></div>
+    <div><span class="n">4</span><span>Buscar películas por título</span></div>
+    <div><span class="n">5</span><span>Informe con @Query</span></div>
+    <div class="des"><span class="n">6</span><span>Desafío sin ayuda</span></div>
+  </div>
+</section>
+
+<!-- ============ 12 · ¿DÓNDE SE ROMPIÓ?: REGLAS ============ -->
+<section class="slide" data-nombre="¿Dónde se rompió?">
+  <div class="kicker" style="color:var(--err)">Cierre · ¿dónde se rompió?</div>
+  <h2>Cinco errores reales. ¿En qué capa?</h2>
+  <div class="reglas">
+    <div><div class="n">A·B·C·D</div><b>una letra en el chat</b><small>Miran el error y escriben solo la letra de la capa donde creen que se rompió.</small></div>
+    <div><div class="n">30''</div><b>por caso</b><small>Si nadie se anima, aparece una pista.</small></div>
+    <div><div class="n">0</div><b>puntos</b><small>No hay puntaje: equivocarse acá no cuesta nada, y es justo lo que queremos ver.</small></div>
+  </div>
+</section>
+<!--CASOS-->
+
+<!-- ============ CIERRE ============ -->
+<section class="slide puntos" data-nombre="Cierre">
+  <div class="kicker">Para llevarse</div>
+  <h2>Cuatro ideas</h2>
+  <div class="ideas4">
+    <div style="--c:var(--rep)"><span class="n">1</span><div><b>Un repositorio es una interfaz</b><small>La clase la genera Spring al arrancar.</small></div></div>
+    <div style="--c:var(--srv)"><span class="n">2</span><div><b>El nombre es la consulta</b><small>Y cuando no alcanza: <code>@Query</code> con JPQL.</small></div></div>
+    <div style="--c:var(--ctl)"><span class="n">3</span><div><b>Cada capa, un trabajo</b><small>Controller traduce · Service decide · Repository consulta.</small></div></div>
+    <div style="--c:var(--err)"><span class="n">4</span><div><b>Los errores tienen dueño</b><small>400 · 404 · 409, traducidos en un solo lugar.</small></div></div>
+  </div>
+  <div class="reinicio"><button class="btn claro" id="borrarTodo" type="button">Borrar mis cambios</button><span>Vuelve a la portada y borra las opciones marcadas.</span></div>
+</section>
+
+</div></div>
+<div id="barra"></div>
+<div id="nav"><button id="navAtras">◀</button><span id="navNum"></span><button id="navAdelante">▶</button><button id="navFull" title="Pantalla completa (F)">⛶</button></div>
+<script>
+// =====================================================================
+// Utilidades
+// =====================================================================
+const $ = s => document.querySelector(s);
+const $$ = s => Array.from(document.querySelectorAll(s));
+const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const COLOR = { cli: 'var(--cli)', mvc: 'var(--mvc)', ctl: 'var(--ctl)', srv: 'var(--srv)', rep: 'var(--rep)', orm: 'var(--orm)', bd: 'var(--bd)', err: 'var(--err)' };
+const HEX = { cli: '#64748b', mvc: '#7c3aed', ctl: '#2563eb', srv: '#0e8fa8', rep: '#0f9d6b', orm: '#c58a06', bd: '#e2571b', err: '#d9253a', acento: '#2f2bd9', ok: '#0f9d6b' };
+const HOOKS = {};   // id de slide -> { enter(dir), next(), prev() }  next/prev devuelven true si consumieron la flecha
+</script>
+
+<script>
+// =====================================================================
+// PORTADA y AGENDA
+// =====================================================================
+(function () {
+  const arte = $('#portadaArte');
+  const piezas = [
+    ['MVC', 'mvc', 70, 90, 150, 0], ['CTL', 'ctl', 250, 190, 190, 1], ['SRV', 'srv', 90, 330, 170, 0], ['REP', 'rep', 300, 430, 230, 1],
+    ['ORM', 'orm', 110, 560, 120, 0], ['BD', 'bd', 380, 690, 160, 1], ['ERR', 'err', 60, 720, 110, 1], ['@', 'cli', 470, 60, 100, 1]
+  ];
+  arte.innerHTML = piezas.map((p, i) => '<div class="bloque" style="left:' + p[2] + 'px;top:' + p[3] + 'px;width:' + p[4] + 'px;height:' + p[4] + 'px;background:' + HEX[p[1]] +
+    ';border-radius:' + (p[5] ? '50%' : '0') + ';animation:flota ' + (5 + i % 3) + 's ease-in-out ' + (i * .4) + 's infinite alternate">' + p[0] + '</div>').join('') +
+    '<style>@keyframes flota{to{transform:translateY(-18px) rotate(' + 4 + 'deg)}}</style>';
+
+  const AG = [
+    ['10:50', 'Spring Data', 'Qué es y quién crea los objetos', 'mvc'],
+    ['11:05', 'Menos código', 'Del código a mano a Spring', 'ctl'],
+    ['11:20', 'El viaje', 'Un pedido por las capas', 'srv'],
+    ['11:40', 'Pedidos', 'Voten en el chat', 'rep'],
+    ['12:00', 'Pausa', '10 minutos', 'cli'],
+    ['12:10', 'Spring Data', 'El nombre es la consulta', 'orm'],
+    ['12:30', 'Práctico', 'Videoclub 2026', 'bd'],
+    ['13:10', 'Errores', '¿Dónde se rompió?', 'err']
+  ];
+  $('#agenda').innerHTML = AG.map((a, i) => '<div style="--c:' + COLOR[a[3]] + '"><span class="hora">' + a[0] + '</span><div class="num">' + (i + 1) + '</div><b>' + a[1] + '</b><small>' + a[2] + '</small><span class="franja"></span></div>').join('');
+})();
+</script>
+
+<script>
+// =====================================================================
+// QUÉ ES / PARA QUÉ SIRVE / QUIÉN CREA LOS OBJETOS: se revelan de a un paso
+// =====================================================================
+(function () {
+  function pasos(id, total, pintar) {
+    let k = 0;
+    HOOKS[id] = {
+      enter(dir) { k = dir < 0 ? total : 0; pintar(k); },
+      next() { if (k >= total) return false; k++; pintar(k); return true; },
+      prev() { if (k <= 0) return false; k--; pintar(k); return true; }
+    };
+  }
+  // Qué es: 1) resalta lo que escribís vos + el código; 2) resalta lo que genera Spring Data
+  pasos('s-quees', 2, k => {
+    $$('#s-quees .eslabon').forEach(e => {
+      const q = e.dataset.q;
+      e.classList.toggle('brilla', (k === 1 && q === 'vos') || (k === 2 && q === 'spring'));
+      e.classList.toggle('opaco', k > 0 && !((k === 1 && q === 'vos') || (k === 2 && q === 'spring')));
+    });
+    $('#queesCodigo').classList.toggle('escondido', k < 1);
+    $('#queesNota').classList.toggle('escondido', k < 2);
+  });
+  // Para qué sirve: una tarjeta por paso y al final la banda
+  pasos('s-sirve', 4, k => {
+    $$('#s-sirve .uso').forEach((u, i) => u.classList.toggle('escondido', k < i + 1));
+    $('#sirveBanda').classList.toggle('escondido', k < 4);
+  });
+  // Quién crea los objetos: sin Spring, con Spring, conclusión
+  pasos('s-quien', 3, k => {
+    $$('#s-quien .lado').forEach((l, i) => l.classList.toggle('escondido', k < i + 1));
+    $('#quienBanda').classList.toggle('escondido', k < 3);
+  });
+})();
+</script>
+<script>
+// =====================================================================
+// 3 · EL CONTENEDOR CREA LOS BEANS (datos reales del videoclub al arrancar)
+// =====================================================================
+(function () {
+  const W = 280, H = 84;
+  const BEANS = [
+    { n: 'actorRepository',    c: 'rep', x: 0,   y: 50,  txt: 'generado por Spring Data', rec: [] },
+    { n: 'actorService',       c: 'srv', x: 350, y: 50,  txt: 'recibió actorRepository', rec: ['actorRepository'] },
+    { n: 'actorController',    c: 'ctl', x: 700, y: 50,  txt: 'recibió actorService', rec: ['actorService'] },
+    { n: 'filmRepository',     c: 'rep', x: 0,   y: 230, txt: 'generado por Spring Data', rec: [] },
+    { n: 'filmService',        c: 'srv', x: 350, y: 230, txt: 'recibió filmRepository', rec: ['filmRepository'] },
+    { n: 'filmController',     c: 'ctl', x: 700, y: 230, txt: 'recibió filmService', rec: ['filmService'] },
+    { n: 'manejadorDeErrores', c: 'err', x: 700, y: 410, txt: 'no recibe nada', rec: [] }
+  ];
+  const TERM = [
+    '1 actorRepository    (Spring Data)', '2 actorService       actorRepository', '3 actorController    actorService',
+    '4 filmRepository     (Spring Data)', '5 filmService        filmRepository', '6 filmController     filmService',
+    '7 manejadorDeErrores -'
+  ];
+  const g = $('#grafo'), svg = $('#grafoSvg');
+  const pos = {};
+  BEANS.forEach((b, i) => {
+    pos[b.n] = b;
+    g.insertAdjacentHTML('beforeend', '<div class="bn" id="bn-' + b.n + '" style="left:' + b.x + 'px;top:' + (b.y + 40) + 'px;--c:' + COLOR[b.c] + '"><span class="n">' + (i + 1) + '</span><b>' + b.n + '</b><small>' + b.txt + '</small></div>');
+  });
+  let defs = '<defs>' + Object.keys(HEX).map(k => '<marker id="punta-' + k + '" viewBox="0 0 10 10" refX="9" refY="5" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="16" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="' + HEX[k] + '"/></marker>').join('') + '</defs>';
+  let flechas = '';
+  BEANS.forEach(b => b.rec.forEach(desde => {
+    const a = pos[desde];
+    let d;
+    if (a.x === b.x) {   // misma columna: de abajo del primero a arriba del segundo
+      d = 'M' + (a.x + W / 2) + ',' + (a.y + 40 + H) + ' L' + (b.x + W / 2) + ',' + (b.y + 40 - 4);
+    } else {
+      const x1 = a.x + W, y1 = a.y + 40 + H / 2, x2 = b.x - 6, y2 = b.y + 40 + H / 2, m = (x1 + x2) / 2;
+      d = 'M' + x1 + ',' + y1 + ' C' + m + ',' + y1 + ' ' + m + ',' + y2 + ' ' + x2 + ',' + y2;
+    }
+    flechas += '<path class="flecha" data-a="' + desde + '" data-b="' + b.n + '" d="' + d + '" stroke="' + HEX[a.c] + '" marker-end="url(#punta-' + a.c + ')"/>';
+  }));
+  svg.innerHTML = defs + flechas;
+  $('#terminal').insertAdjacentHTML('beforeend', '<div class="l" id="tl-h">== CREO ESTOS OBJETOS (sin new) ==</div>' + TERM.map((t, i) => '<div class="l" id="tl-' + i + '">' + esc(t) + '</div>').join(''));
+
+  let k = 0;   // 0 = nada; 1..7 = beans; 8 = pregunta; 9 = respuesta
+  function pintar() {
+    BEANS.forEach((b, i) => $('#bn-' + b.n).classList.toggle('ve', k > i));
+    $$('#grafoSvg .flecha').forEach(f => {
+      const i = BEANS.findIndex(b => b.n === f.dataset.b);
+      f.classList.toggle('ve', k > i);
+      f.classList.toggle('fuerte', k >= 9 && f.dataset.a === 'actorRepository');
+    });
+    $('#tl-h').classList.toggle('ve', k > 0);
+    TERM.forEach((t, i) => $('#tl-' + i).classList.toggle('ve', k > i));
+    $('#pregBeans').classList.toggle('oculto', k < 8);
+    $('#respBeans').classList.toggle('oculto', k < 9);
+    $('#bn-actorRepository').classList.toggle('brilla', k >= 9);
+  }
+  HOOKS['s-contenedor'] = {
+    enter(dir) { k = dir < 0 ? 9 : 0; pintar(); },
+    next() { if (k >= 9) return false; k++; pintar(); return true; },
+    prev() { if (k <= 0) return false; k--; pintar(); return true; }
+  };
+})();
+</script>
+
+<script>
+// =====================================================================
+// 4 · YA LO CONSTRUYERON: el código se borra y se reescribe como lo escribe Spring
+// =====================================================================
+(function () {
+  const ESTACIONES = [
+    { f: 'Semana 4', t: 'Nuestra ArrayList', archivo: 'MiArrayList.java', boton: 'Dejá que Java lo haga', antes: 17, despues: 2, marcar: [1, 4, 5, 6, 8, 11, 14],
+      codigo: ['public class MiArrayList<E> extends AbstractList<E> {', '    private Object[] elementos = new Object[10];', '    private int count;', '',
+        '    public boolean add(E e) {', '        if (count == elementos.length) {', '            elementos = Arrays.copyOf(elementos, count * 2);', '        }',
+        '        elementos[count++] = e;', '        return true;', '    }', '    public E get(int i) {', '        return (E) elementos[i];', '    }',
+        '    public int size() { return count; }', '}'],
+      nuevo: ['List<String> tecnologias = new ArrayList<>();', 'tecnologias.add("Spring");'],
+      notas: [[0, 'La de Java', 'Por dentro hace lo mismo que la nuestra: arreglo, capacidad, copia.'], [1, 'Crece sola', 'Nadie ve el Arrays.copyOf, pero está ahí.']] },
+    { f: '15/09', t: 'Repositorio con JPA', archivo: 'BaseRepository.java + JpaBaseRepository.java', boton: 'Dejá que Spring lo haga', antes: 77, despues: 3, marcar: [1, 2, 3, 4, 8, 9, 12, 13, 14],
+      codigo: ['public interface BaseRepository<T, ID> {', '    Optional<T> findById(ID id);', '    List<T> findAll();', '    T save(T entity);', '    void delete(T entity);', '}',
+        'public class JpaBaseRepository<T, ID> implements BaseRepository<T, ID> {', '    protected final EntityManager em;',
+        '    public Optional<T> findById(ID id) { return Optional.ofNullable(em.find(tipo, id)); }',
+        '    public T save(T entity) { return em.merge(entity); }', '    // ... findAll, delete, count', '}',
+        'public List<Artist> findByNameContains(String texto) {', '    return em.createQuery("select a from Artist a where ...", Artist.class)',
+        '             .setParameter("texto", "%" + texto + "%").getResultList();', '}'],
+      nuevo: ['public interface ArtistRepository extends JpaRepository<Artist, Long> {', '    List<Artist> findByNameContainingIgnoreCase(String texto);', '}'],
+      notas: [[0, 'Heredado', 'save, findById, findAll, delete, count: ya implementados.'], [1, 'El nombre es la consulta', 'Spring arma el JPQL que escribían a mano.'], [2, 'Sin clase', 'La implementación la genera Spring al arrancar.']] },
+    { f: '24/09', t: 'm-commerce en memoria', archivo: 'Repository.java + RepositoyImpl.java', boton: 'Dejá que Spring lo haga', antes: 48, despues: 2, marcar: [1, 2, 3, 4, 7, 8, 9, 10, 15],
+      codigo: ['public interface Repository<T extends BusinessEntity> {', '    void add(T entity);', '    Optional<T> findById(Integer id);', '    void delete(Integer id);', '    Set<T> findAll();', '}',
+        'public abstract class RepositoyImpl<T extends BusinessEntity> implements Repository<T> {', '    private HashSet<T> items;',
+        '    public void add(T entity) { this.items.add(entity); }', '    public Optional<T> findById(Integer id) {',
+        '        return items.stream().filter(e -> e.getId().equals(id)).findFirst();', '    }', '    // ... delete, findAll', '}',
+        '@Repository', 'public class UserRepositoryImpl extends RepositoyImpl<User> implements UserRepository { }'],
+      nuevo: ['public interface UserRepository extends JpaRepository<User, Integer> { }', 'public interface ProductRepository extends JpaRepository<Product, Integer> { }'],
+      notas: [[0, 'Mismo contrato', 'save, findById, findAll, deleteById… sin escribirlos.'], [1, 'Los datos quedan', 'En una base, no en un HashSet que se borra al apagar.']] },
+    { f: '29/09 · hoy', t: 'Videoclub', archivo: 'FilmRepository.java', boton: 'Escribirlo como hoy', antes: 0, despues: 4,
+      codigo: ['// ¿y hoy?'],
+      nuevo: ['public interface FilmRepository extends JpaRepository<Film, Integer> {', '', '    List<Film> findByRating(String rating);', '',
+        '    List<Film> findByTitleContainingIgnoreCase(String texto);', '}'],
+      notas: [[0, 'Una interfaz', 'Film es la entidad; Integer, el tipo del id.'], [2, 'Ya resuelto', 'WHERE rating = ?'], [4, 'Misión 4', 'WHERE UPPER(title) LIKE UPPER(\'%texto%\')'], [5, 'Y listo', 'El resto lo hace Spring.']] }
+  ];
+  const TOKEN = /("(?:[^"\\]|\\.)*")|(\/\/.*$)|(@\w+)|\b(public|interface|extends|implements|class|abstract|private|protected|final|return|new|if|void|int|boolean|long)\b|\b([A-Z]\w*)\b/g;
+  function resaltar(linea) {
+    let out = '', ult = 0, m;
+    TOKEN.lastIndex = 0;
+    while ((m = TOKEN.exec(linea)) !== null) {
+      out += esc(linea.slice(ult, m.index));
+      const clase = m[1] ? 'st' : m[2] ? 'cm' : m[3] ? 'an' : m[4] ? 'kw' : 'ty';
+      out += '<span class="' + clase + '">' + esc(m[0]) + '</span>';
+      ult = TOKEN.lastIndex;
+    }
+    return out + esc(linea.slice(ult));
+  }
+  let est = 0, fase = 0, anim = null;
+  $('#estaciones').innerHTML = ESTACIONES.map((e, i) => '<div data-i="' + i + '"><small>' + e.f + '</small><b>' + e.t + '</b></div>').join('');
+  $$('#estaciones div').forEach(d => d.onclick = () => { est = +d.dataset.i; fase = 0; pintarAntes(); });
+
+  function lineasHtml(lineas, marcar) {
+    const m = new Set(marcar || []);
+    return lineas.map((l, i) => '<div class="ln' + (m.has(i) ? ' marca' : '') + '"><span class="nro">' + (i + 1) + '</span><span class="txt">' + resaltar(l) + '</span></div>').join('');
+  }
+  function pintarAntes() {
+    detener();
+    const e = ESTACIONES[est];
+    $$('#estaciones div').forEach((d, i) => d.classList.toggle('on', i === est));
+    $('#evoArchivo').textContent = e.archivo;
+    $('#evoCodigo').innerHTML = lineasHtml(e.codigo, e.marcar);
+    $('#evoCodigo').scrollTop = 0;
+    $('#evoLey').style.visibility = (e.marcar && e.marcar.length) ? 'visible' : 'hidden';
+    $('#evoNotas').innerHTML = e.notas.map(n => '<div class="nota"><b>línea ' + (n[0] + 1) + ' · ' + esc(n[1]) + '</b>' + esc(n[2]) + '</div>').join('');
+    $('#evoNum').textContent = e.antes || '0';
+    $('#evoNumTxt').textContent = 'líneas escritas a mano';
+    $('#evoBoton').textContent = e.boton; $('#evoBoton').disabled = false;
+  }
+  function pintarDespues() {
+    detener();
+    const e = ESTACIONES[est];
+    $('#evoCodigo').innerHTML = lineasHtml(e.nuevo);
+    $('#evoLey').style.visibility = 'hidden';
+    $$('#evoNotas .nota').forEach(n => n.classList.add('ve'));
+    $('#evoNum').textContent = e.despues; $('#evoNumTxt').textContent = 'líneas con ' + (est === 0 ? 'Java' : 'Spring Data');
+    $('#evoBoton').disabled = true;
+  }
+  function detener() { if (anim) { clearTimeout(anim.t); anim = null; } }
+  function animar() {
+    const e = ESTACIONES[est];
+    $('#evoBoton').disabled = true;
+    const cont = $('#evoCodigo');
+    let lineas = e.codigo.slice();
+    const borrar = () => {               // 1) se borra desde abajo, como con backspace
+      if (!anim) return;
+      while (lineas.length && lineas[lineas.length - 1].length === 0) lineas.pop();
+      if (!lineas.length) { anim.t = setTimeout(escribir, 250); return; }
+      const u = lineas.length - 1;
+      lineas[u] = lineas[u].slice(0, Math.max(0, lineas[u].length - 5));
+      cont.innerHTML = lineas.map((l, i) => '<div class="ln"><span class="nro">' + (i + 1) + '</span><span class="txt">' + esc(l) + (i === u ? '<span class="cursor"></span>' : '') + '</span></div>').join('');
+      anim.t = setTimeout(borrar, 14);
+    };
+    let fila = 0, col = 0;
+    const hechas = [];
+    const escribir = () => {             // 2) se escribe el código nuevo, letra por letra
+      if (!anim) return;
+      if (fila >= e.nuevo.length) { pintarDespues(); return; }
+      const obj = e.nuevo[fila];
+      col = Math.min(obj.length, col + 2);
+      const html = hechas.map((l, i) => '<div class="ln"><span class="nro">' + (i + 1) + '</span><span class="txt">' + resaltar(l) + '</span></div>').join('') +
+        '<div class="ln"><span class="nro">' + (fila + 1) + '</span><span class="txt">' + esc(obj.slice(0, col)) + '<span class="cursor"></span></span></div>';
+      cont.innerHTML = html;
+      if (col >= obj.length) {
+        hechas.push(obj);
+        const nota = e.notas.findIndex(n => n[0] === fila);
+        if (nota >= 0) $$('#evoNotas .nota')[nota].classList.add('ve');
+        fila++; col = 0;
+        anim.t = setTimeout(escribir, 380);
+      } else anim.t = setTimeout(escribir, 28);
+    };
+    // contador animado
+    const a = e.antes, b = e.despues, t0 = performance.now();
+    const cuenta = t => { if (!anim) return; const p = Math.min(1, (t - t0) / 1800); $('#evoNum').textContent = Math.round(a + (b - a) * p); if (p < 1 && anim) requestAnimationFrame(cuenta); };
+    anim = { t: null };
+    requestAnimationFrame(cuenta);
+    $('#evoNumTxt').textContent = 'líneas con ' + (est === 0 ? 'Java' : 'Spring Data');
+    borrar();
+  }
+  $('#evoBoton').onclick = () => { if (fase === 0) { fase = 1; animar(); } };
+  HOOKS['s-evolucion'] = {
+    enter(dir) { est = dir < 0 ? ESTACIONES.length - 1 : 0; fase = 0; pintarAntes(); },
+    next() {
+      if (fase === 0) { fase = 1; animar(); return true; }
+      if (anim) { pintarDespues(); return true; }
+      if (est < ESTACIONES.length - 1) { est++; fase = 0; pintarAntes(); return true; }
+      return false;
+    },
+    prev() {
+      if (fase === 1) { fase = 0; pintarAntes(); return true; }
+      if (est > 0) { est--; fase = 0; pintarAntes(); return true; }
+      return false;
+    }
+  };
+})();
+</script>
+
+<script>
+// =====================================================================
+// 5 · EL VIAJE DE UN PEDIDO (mapa animado)
+// =====================================================================
+(function () {
+  const Y = 170, R = 58;
+  const NODOS = {
+    cli: { x: 110, y: Y, tag: 'CLI', nom: 'Cliente', rol: 'navegador · Postman' },
+    mvc: { x: 330, y: Y, tag: 'MVC', nom: 'Spring MVC', rol: 'la recepción' },
+    ctl: { x: 550, y: Y, tag: 'CTL', nom: 'Controller', rol: 'el mozo' },
+    srv: { x: 770, y: Y, tag: 'SRV', nom: 'Service', rol: 'la cocina' },
+    rep: { x: 990, y: Y, tag: 'REP', nom: 'Repository', rol: 'el despensero' },
+    orm: { x: 1200, y: Y, tag: 'ORM', nom: 'Hibernate', rol: 'traduce a SQL' },
+    bd:  { x: 1410, y: Y, tag: 'BD', nom: 'Base SQLite', rol: 'el depósito' },
+    err: { x: 660, y: 350, tag: 'ERR', nom: 'Manejador de errores', rol: 'traduce excepciones a códigos' }
+  };
+  // Pasos: [nodo, título, detalle, código, vuelta?, fallo?]
+  const ESC = [
+    { v: 'GET', c: 200, n: 'un actor que existe', p: [
+      ['cli', 'Sale el pedido', 'Un verbo y una URL. Nada más.', 'GET /api/actores/1'],
+      ['mvc', '¿Quién lo atiende?', 'Busca el método que coincide con verbo + URL.', '@GetMapping("/{id}")'],
+      ['ctl', 'El mozo delega', 'No sabe buscar: se lo pide al Service.', 'actorService.buscarPorId(1)'],
+      ['srv', 'La cocina pide el dato', 'Si no existiera, acá se decide qué hacer.', 'actorRepository.findById(1)'],
+      ['rep', 'Un método que nadie escribió', 'findById viene de JpaRepository.', ''],
+      ['orm', 'Arma el SQL', 'Desde el mapeo @Entity.', 'select … from actor where actor_id = ?'],
+      ['bd', 'Una fila', 'La base solo sabe de filas.', '1 | PENELOPE | GUINESS'],
+      ['orm', 'Fila → objeto Actor', 'Lo que antes hacían a mano con ResultSet.', '', 1],
+      ['srv', 'Existe: sigue', 'No hay nada que decidir.', '', 1],
+      ['ctl', 'Elige el código', 'Todo salió bien: 200.', 'ResponseEntity.ok(actor)', 1],
+      ['mvc', 'Objeto → JSON', 'Jackson lo convierte en texto.', '{ "actorId": 1, "firstName": "PENELOPE", … }', 1],
+      ['cli', '200 OK', 'Viaje completo: cada capa hizo lo suyo.', '', 1]] },
+    { v: 'GET', c: 404, n: 'un actor que no existe', p: [
+      ['cli', 'Sale el pedido', 'El actor 999 no existe.', 'GET /api/actores/999'],
+      ['mvc', '¿Quién lo atiende?', 'El mismo método de antes.', '@GetMapping("/{id}")'],
+      ['ctl', 'El mozo delega', 'No pregunta si existe.', 'actorService.buscarPorId(999)'],
+      ['srv', 'La cocina pide el dato', '', 'actorRepository.findById(999)'],
+      ['rep', 'Repository', 'findById, heredado.', ''],
+      ['orm', 'Arma el SQL', '', 'select … from actor where actor_id = ?'],
+      ['bd', 'Cero filas', 'Para la base no es un error.', ''],
+      ['srv', 'La cocina decide: problema', 'No habla HTTP: lanza una excepción.', 'throw new RecursoNoEncontradoException(…)', 1, 1],
+      ['err', 'Traduce la excepción', 'Un único lugar para todos los errores.', 'RecursoNoEncontrado → 404', 1],
+      ['cli', '404 Not Found', '¿Quién sabía que era un 404? El traductor.', '', 1]] },
+    { v: 'POST', c: 201, n: 'crear un actor', p: [
+      ['cli', 'Sale el pedido', 'Esta vez con un cuerpo JSON.', 'POST /api/actores  { "firstName": "Ricardo", "lastName": "Darin" }'],
+      ['mvc', 'JSON → objeto', 'Jackson arma un ActorRequest.', 'new ActorRequest("Ricardo", "Darin")'],
+      ['ctl', '@Valid: buena forma', 'Nombre y apellido: no vacíos, hasta 45 letras.', '@Valid @RequestBody ActorRequest datos'],
+      ['srv', 'Reglas', '¿Ya existe? ¿Qué id le toca? Todo en mayúsculas.', 'actorService.crear(datos)'],
+      ['rep', 'existsBy · @Query · save', 'Tres métodos. Ninguno tiene una clase que los implemente.', ''],
+      ['orm', 'SELECT … y INSERT', '', 'insert into actor (first_name, last_name, actor_id) values (?, ?, ?)'],
+      ['bd', 'Guarda la fila', 'actor_id 202: el más alto + 1.', ''],
+      ['srv', 'Devuelve el actor guardado', '', '', 1],
+      ['ctl', '201 + Location', 'Se creó algo nuevo: dónde quedó.', 'ResponseEntity.created(URI…)', 1],
+      ['mvc', 'Objeto → JSON', '', '', 1],
+      ['cli', '201 Created', 'Viaje completo, con escritura.', '', 1]] },
+    { v: 'POST', c: 409, n: 'actor repetido', p: [
+      ['cli', 'Sale el pedido', 'NICK WAHLBERG ya está en la base.', 'POST /api/actores  { "firstName": "Nick", "lastName": "Wahlberg" }'],
+      ['mvc', 'JSON → objeto', '', ''],
+      ['ctl', '@Valid: buena forma', 'Los datos están bien escritos.', ''],
+      ['srv', '¿Ya existe?', 'Le pregunta al despensero.', ''],
+      ['rep', 'Consulta derivada', 'El nombre del método es la consulta.', 'existsByFirstNameIgnoreCaseAndLastNameIgnoreCase("Nick", "Wahlberg")'],
+      ['orm', 'Arma el SQL', '', 'select … where upper(first_name) = upper(?) and upper(last_name) = upper(?)'],
+      ['bd', 'Hay una fila', 'Es el actor 2.', ''],
+      ['srv', 'Regla rota', 'Datos bien formados, pero chocan con lo que ya hay.', 'throw new ReglaDeNegocioException(…)', 1, 1],
+      ['err', 'Traduce la excepción', '', 'ReglaDeNegocio → 409', 1],
+      ['cli', '409 Conflict', '¿Por qué no 400? El pedido estaba bien armado.', '', 1]] },
+    { v: 'POST', c: 400, n: 'datos inválidos', p: [
+      ['cli', 'Sale el pedido', 'Nombre y apellido vacíos.', 'POST /api/actores  { "firstName": "", "lastName": "" }'],
+      ['mvc', 'JSON → objeto', 'El JSON está bien escrito: se puede leer.', ''],
+      ['ctl', '@Valid lo frena', 'Fallan dos campos en la puerta.', '@NotBlank  @Size(max = 45)', 0, 1],
+      ['err', 'Lista los campos', '', '{ "campos": { "firstName": "…", "lastName": "…" } }', 1],
+      ['cli', '400 Bad Request', 'Cero consultas SQL. Validar temprano es barato.', '', 1]] },
+    { v: 'POST', c: 400, n: 'JSON roto', p: [
+      ['cli', 'Sale el pedido', 'Falta cerrar la llave.', '{ "firstName": "Ana", '],
+      ['mvc', 'No se puede leer', 'Jackson no puede armar ningún objeto.', 'HttpMessageNotReadableException', 0, 1],
+      ['err', 'Traduce', '', '→ 400 "JSON ilegible"', 1],
+      ['cli', '400 Bad Request', 'Ninguna línea de nuestro código se ejecutó.', '', 1]] },
+    { v: 'DELETE', c: 409, n: 'actor con películas', p: [
+      ['cli', 'Sale el pedido', 'Borrar a PENELOPE, que actúa en 19 películas.', 'DELETE /api/actores/1'],
+      ['mvc', '¿Quién lo atiende?', '', '@DeleteMapping("/{id}")'],
+      ['ctl', 'El mozo delega', '', 'actorService.eliminar(1)'],
+      ['srv', '¿Existe? Sí: que lo borre', '', 'actorRepository.deleteById(1)'],
+      ['rep', 'deleteById()', 'Heredado de JpaRepository.', ''],
+      ['orm', 'DELETE', '', 'delete from actor where actor_id = ?'],
+      ['bd', 'La base se niega', 'Hay filas en FILM_ACTOR que apuntan a ese actor.', 'violación de clave foránea', 0, 1],
+      ['err', 'Traduce', 'El error de la base también tiene su código.', '→ 409 Conflict', 1],
+      ['cli', '409 Conflict', 'Esta vez la tarjeta roja la levantó la base.', '', 1]] },
+    { v: 'PATCH', c: 405, n: 'verbo no permitido', p: [
+      ['cli', 'Sale el pedido', 'Nadie programó un @PatchMapping.', 'PATCH /api/actores/1'],
+      ['mvc', 'No hay método para ese verbo', 'La URL existe, el verbo no.', '', 0, 1],
+      ['cli', '405 Method Not Allowed', 'Lo resolvió Spring solo.', '', 1]] }
+  ];
+  const VCOL = { GET: HEX.ctl, POST: HEX.rep, DELETE: HEX.err, PATCH: HEX.orm };
+  const mapa = $('#mapa');
+
+  function camino(a, b) {
+    const A = NODOS[a], B = NODOS[b];
+    if (a === b) return 'M' + A.x + ',' + A.y;
+    if (a !== 'err' && b !== 'err') {
+      if (B.x > A.x) return 'M' + A.x + ',' + A.y + ' L' + B.x + ',' + B.y;          // ida: recta
+      const mx = (A.x + B.x) / 2, alto = Math.min(120, 40 + Math.abs(A.x - B.x) / 4);
+      return 'M' + A.x + ',' + A.y + ' Q' + mx + ',' + (A.y - alto * 2) + ' ' + B.x + ',' + B.y;   // vuelta: arco arriba
+    }
+    const mx = (A.x + B.x) / 2;
+    return 'M' + A.x + ',' + A.y + ' Q' + mx + ',' + (Math.max(A.y, B.y) + 60) + ' ' + B.x + ',' + B.y;
+  }
+  // Mapa base
+  let base = '<defs><filter id="sombra" x="-50%" y="-50%" width="200%" height="200%"><feDropShadow dx="0" dy="6" stdDeviation="6" flood-opacity=".15"/></filter></defs>';
+  const orden = ['cli', 'mvc', 'ctl', 'srv', 'rep', 'orm', 'bd'];
+  for (let i = 0; i < orden.length - 1; i++) base += '<path class="arista" data-a="' + orden[i] + '" data-b="' + orden[i + 1] + '" d="' + camino(orden[i], orden[i + 1]) + '"/>';
+  ['mvc', 'ctl', 'srv', 'bd', 'cli'].forEach(n => base += '<path class="arista" data-a="' + n + '" data-b="err" d="' + camino(n, 'err') + '"/>');
+  base += '<g id="rastro"></g>';
+  Object.keys(NODOS).forEach(k => {
+    const n = NODOS[k], lado = k === 'err';
+    base += '<g class="nodo" id="nd-' + k + '" transform="translate(' + n.x + ',' + n.y + ')">' +
+      '<circle class="anillo" r="' + (R + 10) + '" stroke="' + HEX[k] + '"/>' +
+      '<circle class="cuerpo" r="' + R + '" fill="#fff" stroke="' + HEX[k] + '" filter="url(#sombra)"/>' +
+      '<text class="tag" y="11" fill="' + HEX[k] + '">' + n.tag + '</text>' +
+      (lado ? '<text class="nom" x="' + (R + 22) + '" y="-4" style="text-anchor:start">' + n.nom + '</text><text class="rol" x="' + (R + 22) + '" y="20" style="text-anchor:start">' + n.rol + '</text>'
+            : '<text class="nom" y="' + (R + 34) + '">' + n.nom + '</text><text class="rol" y="' + (R + 56) + '">' + n.rol + '</text>') +
+      '<text class="leyenda-nousa" y="' + (-R - 16) + '" style="text-anchor:middle;display:none">no se usa</text></g>';
+  });
+  base += '<g id="ficha" style="display:none"><circle r="22" opacity=".25"/><circle class="nucleo" r="11" fill="#fff" stroke-width="5"/></g>';
+  mapa.innerHTML = base;
+
+  $('#escenarios').innerHTML = ESC.map((e, i) => '<button data-i="' + i + '"><span class="v" style="background:' + VCOL[e.v] + '">' + e.v + '</span>' + e.c + ' · ' + e.n + '</button>').join('');
+  $$('#escenarios button').forEach(b => b.onclick = () => elegir(+b.dataset.i));
+
+  let actual = 0, k = -1, anim = null;
+  function elegir(i) { actual = i; k = -1; pintar(false); }
+  function colorFicha(paso, fallado) { return fallado ? HEX.err : paso[4] ? HEX.ok : HEX.acento; }
+  function pintar(animarDesde) {
+    const e = ESC[actual];
+    $$('#escenarios button').forEach((b, i) => b.classList.toggle('on', i === actual));
+    const usados = new Set(e.p.map(p => p[0]));
+    Object.keys(NODOS).forEach(n => {
+      const g = $('#nd-' + n);
+      g.classList.toggle('apagado', !usados.has(n));
+      g.querySelector('.leyenda-nousa').style.display = usados.has(n) ? 'none' : 'block';
+      g.classList.remove('actual', 'fallo');
+      g.querySelector('.cuerpo').setAttribute('fill', '#fff');
+    });
+    $$('#mapa .arista').forEach(a => a.classList.toggle('usada', usados.has(a.dataset.a) && usados.has(a.dataset.b)));
+    const visitados = new Set(e.p.slice(0, k + 1).map(p => p[0]));
+    visitados.forEach(n => $('#nd-' + n + ' .cuerpo').setAttribute('fill', 'color-mix(in srgb,' + HEX[n] + ' 16%, #fff)'));
+    let fallado = false;
+    e.p.slice(0, k + 1).forEach(p => { if (p[5]) { fallado = true; $('#nd-' + p[0]).classList.add('fallo'); } });
+    // rastro recorrido
+    let rastro = '';
+    for (let i = 1; i <= k; i++) {
+      const f = e.p.slice(0, i + 1).some(p => p[5]);
+      rastro += '<path d="' + camino(e.p[i - 1][0], e.p[i][0]) + '" fill="none" stroke="' + colorFicha(e.p[i], f && !e.p[i][5] ? true : f) + '" stroke-width="4" opacity=".55"/>';
+    }
+    $('#rastro').innerHTML = rastro;
+    const ficha = $('#ficha');
+    const res = $('#viajeResultado');
+    res.classList.remove('ve');
+    if (k < 0) {
+      ficha.style.display = 'none';
+      $('#pNro').textContent = '→'; $('#pNro').style.setProperty('--c', HEX.acento);
+      $('#pTt').textContent = e.v + ' · ' + e.n;
+      $('#pDd').textContent = '¿Hasta qué capa llega? ¿Quién decide el ' + e.c + '?';
+      $('#pCode').classList.add('oculto');
+    } else {
+      const p = e.p[k];
+      $('#nd-' + p[0]).classList.add('actual');
+      $('#pNro').textContent = k + 1; $('#pNro').style.setProperty('--c', HEX[p[0]]);
+      $('#pTt').textContent = p[1]; $('#pDd').textContent = p[2] || NODOS[p[0]].nom;
+      if (p[3]) { $('#pCode').textContent = p[3]; $('#pCode').classList.remove('oculto'); } else $('#pCode').classList.add('oculto');
+      const col = colorFicha(p, fallado);
+      ficha.style.display = null;
+      ficha.querySelectorAll('circle')[0].setAttribute('fill', col);
+      ficha.querySelector('.nucleo').setAttribute('stroke', col);
+      if (animarDesde && k > 0) mover(camino(e.p[k - 1][0], p[0]));
+      else ficha.setAttribute('transform', 'translate(' + NODOS[p[0]].x + ',' + (NODOS[p[0]].y - R - 4) + ')');
+      if (k === e.p.length - 1) {
+        res.textContent = e.c; res.style.background = e.c < 300 ? HEX.ok : HEX.err;
+        setTimeout(() => res.classList.add('ve'), 350);
+      }
+    }
+    $('#pPuntos').innerHTML = e.p.map((_, i) => '<i class="' + (i <= k ? 'hecho' : '') + '"></i>').join('');
+  }
+  function mover(d) {
+    if (anim) cancelAnimationFrame(anim);
+    const tmp = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    tmp.setAttribute('d', d); tmp.setAttribute('fill', 'none'); tmp.setAttribute('stroke', 'none'); mapa.appendChild(tmp);
+    const L = tmp.getTotalLength(), t0 = performance.now(), dur = 650, ficha = $('#ficha');
+    const paso = t => {
+      const q = Math.min(1, (t - t0) / dur), e = q < .5 ? 2 * q * q : 1 - Math.pow(-2 * q + 2, 2) / 2;
+      const pt = tmp.getPointAtLength(L * e);
+      ficha.setAttribute('transform', 'translate(' + pt.x + ',' + (pt.y - R - 4) + ')');
+      if (q < 1) anim = requestAnimationFrame(paso); else { tmp.remove(); anim = null; }
+    };
+    anim = requestAnimationFrame(paso);
+  }
+  HOOKS['s-viaje'] = {
+    enter(dir) { k = dir < 0 ? ESC[actual].p.length - 1 : -1; pintar(false); },
+    next() { if (k >= ESC[actual].p.length - 1) return false; k++; pintar(true); return true; },
+    prev() { if (k < 0) return false; k--; pintar(false); return true; },
+    tecla(key) { const i = parseInt(key, 10); if (i >= 1 && i <= ESC.length) { elegir(i - 1); return true; } return false; }
+  };
+  elegir(0);
+})();
+</script>
+
+<script>
+// =====================================================================
+// 6-8 · HUMANOS COMO CAPAS
+// =====================================================================
+(function () {
+  const ROLES = [
+    ['mvc', 'MVC', 'Recepción', 'Spring MVC', 'Lleva el pedido a la mesa correcta. Convierte el JSON en un formulario.'],
+    ['ctl', 'CTL', 'Mozo', 'Controller', 'Revisa la forma de los datos. Si todo sale bien, elige el código.'],
+    ['srv', 'SRV', 'Cocina', 'Service', 'Tiene el reglamento. No habla HTTP: levanta una tarjeta roja (una excepción).'],
+    ['rep', 'REP', 'Despensero', 'Repository', 'Solo sabe lo que está en su lista: findBy…, existsBy…, countBy…, save.'],
+    ['bd', 'BD', 'Depósito', 'Base de datos', 'Tiene las tablas ACTOR, FILM y FILM_ACTOR. Solo contesta filas.'],
+    ['err', 'ERR', 'Traductor', 'Manejador de errores', 'Convierte tarjetas rojas en códigos: 400, 404, 409.']
+  ];
+  $('#roles').innerHTML = ROLES.map(r => '<div class="rolc" style="--c:' + COLOR[r[0]] + '"><span class="tag">' + r[1] + '</span><h3>' + r[2] + '</h3><div class="es">' + r[3] + '</div><p>' + r[4] + '</p></div>').join('');
+
+  const PEDIDOS = {
+    '1': { final: '#final1', pasos: [
+      ['mvc', 've', 'Convierte el JSON en un ActorRequest.'],
+      ['ctl', 've', '@Valid: nombre y apellido no vacíos. Todo bien.'],
+      ['srv', 've', '¿Ya existe? ¿Qué id le toca?'],
+      ['rep', 've', 'existsBy… → no · maxId() → 201 · save'],
+      ['bd', 've', 'Guarda la fila 202: RICARDO DARIN.'],
+      ['ctl', 've', 'Salió bien: responde 201 y dónde quedó.'],
+      ['fin']] },
+    '2': { final: '#final2', pasos: [
+      ['mvc', 've', 'Convierte el JSON en un ActorRequest.'],
+      ['ctl', 've', '@Valid: no está vacío. La forma está bien.'],
+      ['srv', 've', '¿Ya existe? Le pregunta al Despensero.'],
+      ['rep', 've', 'existsBy…IgnoreCase(…)'],
+      ['bd', 've', 'Compara todo en mayúsculas: hay 1 fila.'],
+      ['srv', 'roja', 'Tarjeta roja: ¡ya existe!'],
+      ['err', 'roja', 'Tarjeta roja → 409 Conflict.'],
+      ['fin']] }
+  };
+  // Votacion: el docente marca lo que eligio la mayoria del chat; al final se ve la respuesta
+  const OPC = { llega: ['Controller', 'Service', 'Base de datos'], codigo: ['201', '400', '404', '409'] };
+  const PREG = { llega: '¿Hasta dónde llega?', codigo: '¿Qué código vuelve?' };
+  $$('.votos').forEach(v => {
+    v.innerHTML = Object.keys(OPC).map(q => '<div class="voto" data-q="' + q + '"><h4>' + PREG[q] + '</h4><div class="ops">' +
+      OPC[q].map(o => '<button type="button">' + o + '</button>').join('') + '</div></div>').join('');
+    v.querySelectorAll('button').forEach(b => b.onclick = ev => {
+      ev.stopPropagation();
+      const ya = b.classList.contains('elegida');
+      b.parentNode.querySelectorAll('button').forEach(x => x.classList.remove('elegida'));
+      if (!ya) b.classList.add('elegida');
+      b.blur();
+    });
+  });
+  function corregir(id, fin) {
+    const v = $('#s-pedido' + id + ' .votos');
+    v.querySelectorAll('.voto').forEach(q => {
+      const correcta = v.dataset[q.dataset.q];
+      q.querySelectorAll('button').forEach(b => {
+        b.classList.toggle('bien', fin && b.textContent === correcta);
+        b.classList.toggle('mal', fin && b.textContent !== correcta && b.classList.contains('elegida'));
+      });
+    });
+  }
+  Object.keys(PEDIDOS).forEach(id => {
+    const P = PEDIDOS[id], cont = $('#recorrido' + id);
+    cont.innerHTML = ROLES.map(r => '<div class="parada" data-r="' + r[0] + '" style="--c:' + COLOR[r[0]] + '"><span class="t">' + r[3] + '</span><b>' + r[2] + '</b><small></small></div>').join('');
+    const usados = new Set(P.pasos.map(p => p[0]));
+    let k = 0;
+    function pintar() {
+      cont.querySelectorAll('.parada').forEach(el => { el.className = 'parada'; el.querySelector('small').textContent = ''; });
+      P.pasos.slice(0, k).forEach(p => {
+        if (p[0] === 'fin') return;
+        const el = cont.querySelector('[data-r="' + p[0] + '"]');
+        el.className = 'parada ' + p[1]; el.querySelector('small').textContent = p[2];
+      });
+      const fin = k >= P.pasos.length;
+      if (fin) cont.querySelectorAll('.parada').forEach(el => { if (!usados.has(el.dataset.r)) el.classList.add('nousa'); });
+      $(P.final).classList.toggle('ve', fin);
+      corregir(id, fin);
+    }
+    HOOKS['s-pedido' + id] = {
+      enter(dir) { k = dir < 0 ? P.pasos.length : 0; pintar(); },
+      next() { if (k >= P.pasos.length) return false; k++; pintar(); return true; },
+      prev() { if (k <= 0) return false; k--; pintar(); return true; }
+    };
+  });
+})();
+</script>
+<script>
+// =====================================================================
+// Parser de consultas derivadas (mismo que el juego descargable)
+// =====================================================================
+const ENTIDADES = {
+  Film: { tabla: 'film', campos: { filmId: 'Integer', title: 'String', releaseYear: 'String', length: 'Integer', rating: 'String', rentalRate: 'Double' },
+          col: { filmId: 'film_id', releaseYear: 'release_year', rentalRate: 'rental_rate' }, rel: {} },
+  Actor: { tabla: 'actor', campos: { actorId: 'Integer', firstName: 'String', lastName: 'String' },
+           col: { actorId: 'actor_id', firstName: 'first_name', lastName: 'last_name' }, rel: {} }
+};
+const OPS = [
+  ['IsNotNull', 'notnull', 0], ['NotNull', 'notnull', 0], ['IsNull', 'null', 0], ['Null', 'null', 0],
+  ['GreaterThanEqual', 'gte', 1], ['LessThanEqual', 'lte', 1], ['GreaterThan', 'gt', 1], ['LessThan', 'lt', 1], ['After', 'gt', 1], ['Before', 'lt', 1],
+  ['Between', 'between', 2], ['NotContaining', 'notcontaining', 1], ['Containing', 'containing', 1], ['Contains', 'containing', 1],
+  ['StartingWith', 'starting', 1], ['EndingWith', 'ending', 1], ['NotLike', 'notlike', 1], ['Like', 'like', 1], ['NotIn', 'notin', 1], ['In', 'in', 1],
+  ['IsTrue', 'true', 0], ['True', 'true', 0], ['IsFalse', 'false', 0], ['False', 'false', 0], ['IsNot', 'ne', 1], ['Not', 'ne', 1], ['Is', 'eq', 1], ['Equals', 'eq', 1]
+];
+const SQLOP = { eq: '= ?', ne: '<> ?', gt: '> ?', gte: '>= ?', lt: '< ?', lte: '<= ?', between: 'BETWEEN ? AND ?', containing: "LIKE '%?%'", notcontaining: "NOT LIKE '%?%'",
+  starting: "LIKE '?%'", ending: "LIKE '%?'", like: 'LIKE ?', notlike: 'NOT LIKE ?', in: 'IN (?, ?, …)', notin: 'NOT IN (?, ?, …)', null: 'IS NULL', notnull: 'IS NOT NULL', true: '= TRUE', false: '= FALSE' };
+const minus = s => s.charAt(0).toLowerCase() + s.slice(1), mayus = s => s.charAt(0).toUpperCase() + s.slice(1);
+function distancia(a, b) {
+  const d = Array.from({ length: a.length + 1 }, (_, i) => [i]);
+  for (let j = 1; j <= b.length; j++) d[0][j] = j;
+  for (let i = 1; i <= a.length; i++) for (let j = 1; j <= b.length; j++) d[i][j] = Math.min(d[i - 1][j] + 1, d[i][j - 1] + 1, d[i - 1][j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));
+  return d[a.length][b.length];
+}
+function propiedad(ent, texto) {
+  const E = ENTIDADES[ent], p = minus(texto);
+  if (E.campos[p]) return { ruta: [p], tipo: E.campos[p], col: E.rel[p] ? p + '_id' : (E.col[p] || p) };
+  for (const r in E.rel) if (texto.startsWith(mayus(r)) && texto.length > r.length) {
+    const D = ENTIDADES[E.rel[r]], sub = minus(texto.slice(r.length));
+    if (D.campos[sub]) return { ruta: [r, sub], tipo: D.campos[sub], col: sub === 'id' ? r + '_id' : 'ev.' + (D.col[sub] || sub), join: sub !== 'id' ? D.tabla : null, rel: r };
+  }
+  const sug = Object.keys(E.campos).map(c => [c, distancia(p.toLowerCase(), c.toLowerCase())]).sort((a, b) => a[1] - b[1])[0];
+  throw new Error("No property '" + p + "' found for type '" + ent + "'" + (sug && sug[1] <= 3 ? "; Did you mean '" + sug[0] + "'" : ''));
+}
+function parsear(ent, metodo) {
+  const m = metodo.trim().match(/^(find|read|get|query|search|stream|count|exists|delete|remove)((?:First|Top)\d*)?(Distinct)?By(.+)$/);
+  if (!m) throw new Error('Spring Data no reconoce "' + metodo + '": tiene que empezar con findBy, countBy, existsBy o deleteBy.');
+  const r = { ent, tipo: { count: 'count', exists: 'exists', delete: 'delete', remove: 'delete' }[m[1]] || 'find', limite: m[2] ? (parseInt(m[2].replace(/\D/g, '')) || 1) : null, distinct: !!m[3], conds: [], con: [], orden: [] };
+  let cuerpo = m[4], ord = '';
+  const io = cuerpo.indexOf('OrderBy'); if (io >= 0) { ord = cuerpo.slice(io + 7); cuerpo = cuerpo.slice(0, io); }
+  if (!cuerpo) throw new Error('Falta la condición después de By.');
+  let todo = false; if (cuerpo.endsWith('AllIgnoreCase')) { todo = true; cuerpo = cuerpo.slice(0, -13); }
+  const partes = cuerpo.split(/(And|Or)(?=[A-Z])/);
+  for (let i = 0; i < partes.length; i++) {
+    if (i % 2) { r.con.push(partes[i]); continue; }
+    let p = partes[i], ic = todo;
+    if (p.endsWith('IgnoreCase')) { ic = true; p = p.slice(0, -10); }
+    let op = ['', 'eq', 1]; for (const o of OPS) if (p.endsWith(o[0]) && p.length > o[0].length) { op = o; break; }
+    const prop = propiedad(ent, op[0] ? p.slice(0, -op[0].length) : p);
+    r.conds.push({ prop, op: op[1], ar: op[2], ic });
+  }
+  if (ord) {
+    const re = /([A-Z][A-Za-z]*?)(Asc|Desc)(?=[A-Z]|$)|([A-Z][A-Za-z]*)$/g; let mm;
+    while ((mm = re.exec(ord)) !== null) { r.orden.push({ prop: propiedad(ent, mm[1] || mm[3]), dir: mm[2] || 'Asc' }); if (mm[3]) break; }
+    if (!r.orden.length) throw new Error('No entiendo el orden: "' + ord + '".');
+  }
+  return r;
+}
+function aSql(r) {
+  const E = ENTIDADES[r.ent];
+  const col = p => (p.join ? '' : '') + p.col;
+  const w = r.conds.map((c, i) => (i ? ' ' + (r.con[i - 1] === 'Or' ? 'OR' : 'AND') + ' ' : '') + (c.ic ? 'UPPER(' + col(c.prop) + ')' : col(c.prop)) + ' ' + (c.ic ? SQLOP[c.op].replace(/('[^']*'|\?)/, 'UPPER($1)') : SQLOP[c.op])).join('');
+  const sel = { find: 'SELECT ' + (r.distinct ? 'DISTINCT ' : '') + '*', count: 'SELECT COUNT(*)', exists: 'SELECT 1', delete: 'DELETE' }[r.tipo];
+  const pj = r.conds.concat(r.orden).map(c => c.prop).find(p => p.join);
+  const join = pj ? ' JOIN ' + pj.join + ' ev ON ev.id = ' + pj.rel + '_id' : '';
+  let s = sel + ' FROM ' + E.tabla + join + ' WHERE ' + w;
+  if (r.orden.length) s += ' ORDER BY ' + r.orden.map(o => o.prop.col + ' ' + o.dir.toUpperCase()).join(', ');
+  if (r.limite) s += ' LIMIT ' + r.limite; else if (r.tipo === 'exists') s += ' LIMIT 1';
+  return s;
+}
+function firma(r, metodo) {
+  const ps = [];
+  r.conds.forEach(c => {
+    const nom = c.prop.ruta.length > 1 ? c.prop.ruta[0] + mayus(c.prop.ruta[1]) : c.prop.ruta[0];
+    if (c.op === 'between') ps.push(c.prop.tipo + ' ' + nom + 'Desde', c.prop.tipo + ' ' + nom + 'Hasta');
+    else if (c.op === 'in' || c.op === 'notin') ps.push('Collection<' + c.prop.tipo + '> ' + nom + 's');
+    else if (c.ar) ps.push(c.prop.tipo + ' ' + nom);
+  });
+  const ret = r.tipo === 'count' ? 'long' : r.tipo === 'exists' ? 'boolean' : r.tipo === 'delete' ? 'void' : r.limite === 1 ? 'Optional<' + r.ent + '>' : 'List<' + r.ent + '>';
+  return ret + ' ' + metodo + '(' + ps.join(', ') + ');';
+}
+</script>
+
+<script>
+// =====================================================================
+// 9 · EL NOMBRE ES LA CONSULTA
+// =====================================================================
+(function () {
+  const PARTES = [
+    ['findBy', 'mvc', 'buscar donde', 'SELECT * FROM film WHERE'],
+    ['Title', 'ctl', 'el atributo', 'title'],
+    ['Containing', 'rep', 'contiene', "LIKE '%texto%'"],
+    ['IgnoreCase', 'orm', 'sin mayúsculas', 'UPPER(…) = UPPER(…)']
+  ];
+  $('#metodoGrande').innerHTML = PARTES.map(p => '<span style="--c:' + COLOR[p[1]] + '">' + p[0] + '</span>').join('');
+  $('#traducciones').innerHTML = PARTES.map(p => '<div style="--c:' + COLOR[p[1]] + '"><small>' + p[0] + ' · ' + p[2] + '</small>' + esc(p[3]) + '</div>').join('');
+  $('#sqlFinal').innerHTML = '<span class="k">SELECT</span> * <span class="k">FROM</span> film <span class="k">WHERE</span> UPPER(title) <span class="k">LIKE</span> UPPER(\'%texto%\')';
+  const inp = $('#probaloInput'), sal = $('#probaloSalida');
+  function probar() {
+    const m = inp.value.trim();
+    try { const r = parsear('Film', m); sal.classList.remove('error'); sal.textContent = firma(r, m) + '\n\n' + aSql(r); }
+    catch (e) { sal.classList.add('error'); sal.textContent = 'La aplicación no arrancaría:\n' + e.message; }
+  }
+  inp.oninput = probar; probar();
+  let k = 0;   // 0 método, 1 partido, 2-5 traducciones, 6 sql, 7 probalo
+  function pintar() {
+    $('#metodoGrande').classList.toggle('partido', k >= 1);
+    $$('#traducciones div').forEach((d, i) => d.classList.toggle('ve', k >= i + 2));
+    $('#sqlFinal').classList.toggle('ve', k >= 6);
+    $('#probalo').classList.toggle('ve', k >= 7);
+  }
+  HOOKS['s-traductor'] = {
+    enter(dir) { k = dir < 0 ? 7 : 0; pintar(); },
+    next() { if (k >= 7) return false; k++; pintar(); if (k === 7) setTimeout(() => inp.focus(), 300); return true; },
+    prev() { if (k <= 0) return false; k--; pintar(); return true; }
+  };
+})();
+</script>
+
+<script>
+// =====================================================================
+// ¿DÓNDE SE ROMPIÓ?: 5 casos (evidencias reproducidas con Spring Boot 4.1.1)
+// Cada alumno escribe una letra en el chat. Clic = marcar la más votada. → pista, → respuesta, → siguiente.
+// =====================================================================
+(function () {
+  const CAPAS = ['Entorno', 'Arranque de Spring', 'Spring MVC / Jackson', 'Controller', 'Service', 'Repository', 'Base de datos'];
+  const CASOS = [
+    { t: 'La aplicación no arranca', esc: 'mvn spring-boot:run y la consola termina así:',
+      ev: 'APPLICATION FAILED TO START\n\nParameter 0 of constructor in ...servicios.ServiceImpl\n<span class="e">required a single bean, but 2 were found:</span>\n    - productRepositoryImpl\n    - userRepositoryImpl',
+      opc: [0, 1, 3, 5], capa: 1,
+      pista: 'Fijate cuándo pasa: ¿la aplicación llegó a atender algún pedido?',
+      por: 'Al arrancar, Spring crea los beans. ServiceImpl&lt;T&gt; tiene @Service y pide un Repository&lt;T&gt; genérico: hay dos candidatos y no puede elegir.',
+      fix: '// sacarle @Service a la clase base genérica\npublic abstract class ServiceImpl<T> ...' },
+    { t: 'Crear un usuario devuelve 500', esc: 'POST /api/user con un JSON correcto. En la consola:',
+      ev: 'InvalidDefinitionException:\n<span class="e">Cannot construct instance of `...entidades.User`</span>\n(no Creators, like default constructor, exist)',
+      opc: [3, 2, 4, 6], capa: 2,
+      pista: 'Dice "construct instance": alguien intentó crear un User a partir del JSON. ¿Quién convierte JSON en objetos?',
+      por: 'Jackson tiene que crear un User desde el JSON y necesita un constructor sin parámetros. Con @SuperBuilder y sin @NoArgsConstructor, no hay cómo.',
+      fix: '@SuperBuilder\n@NoArgsConstructor   // faltaba\npublic class User extends BusinessEntity' },
+    { t: 'Listar usuarios devuelve 500', esc: 'GET /api/user. En la consola:',
+      ev: 'java.lang.ClassCastException:\n<span class="e">class java.util.ImmutableCollections$SetN\ncannot be cast to class java.util.HashSet</span>',
+      opc: [2, 3, 5, 6], capa: 5,
+      pista: 'Es un cast que falla con un Set. ¿Qué capa guarda y devuelve la colección de usuarios en el m-commerce?',
+      por: 'Set.copyOf() devuelve un Set inmutable, que no es un HashSet. El cast compila, pero explota al ejecutar.',
+      fix: 'return (HashSet<T>) Set.copyOf(items);   // antes\nreturn Set.copyOf(items);                 // después' },
+    { t: 'Anda con el 5, no con el 1000', esc: 'Hay usuarios con id 5 y con id 1000.',
+      ev: 'GET /api/user/5      ->  200\n<span class="e">GET /api/user/1000   ->  400 "No existe el elemento"</span>',
+      opc: [6, 4, 3, 5], capa: 5,
+      pista: 'Los dos existen. ¿Dónde se busca el usuario por id? ¿Cómo se comparan dos Integer?',
+      por: 'El repositorio compara Integer con ==: compara referencias. Java reutiliza los Integer de -128 a 127; el 1000 es otro objeto.',
+      fix: '.filter(e -> e.getId() == id)        // antes\n.filter(e -> e.getId().equals(id))   // después' },
+    { t: 'En la PC de la facu no compila', esc: 'El mismo proyecto que anda en casa:',
+      ev: '[ERROR] Failed to execute goal maven-compiler-plugin:3.15.0:compile\n<span class="e">Fatal error compiling: error: release version 25 not supported</span>',
+      opc: [0, 1, 5, 2], capa: 0,
+      pista: 'El código es el mismo que anda en casa. ¿Qué cambió?',
+      por: 'El pom.xml pide Java 25 y el JDK de esa PC es 17 o 21.',
+      fix: '<java.version>17</java.version>   <!-- Spring Boot 4 acepta desde 17 -->' }
+  ];
+  const LETRAS = ['A', 'B', 'C', 'D'];
+  const cierre = $$('.slide').find(s => s.dataset.nombre === 'Cierre');
+  CASOS.forEach((c, i) => {
+    const s = document.createElement('section');
+    s.className = 'slide'; s.id = 's-caso' + i; s.dataset.nombre = 'Caso ' + (i + 1);
+    s.innerHTML = '<div class="kicker" style="color:var(--err)">Caso ' + (i + 1) + ' de ' + CASOS.length + '</div><h2>' + c.t + '</h2>' +
+      '<div class="chat-caso">En el chat: una letra</div><div class="escena-caso">' + esc(c.esc) + '</div><div class="evidencia">' + c.ev + '</div>' +
+      '<div class="capas-opc">' + c.opc.map((k, j) => '<button data-k="' + k + '"><span class="l">' + LETRAS[j] + '</span>' + CAPAS[k] + '</button>').join('') + '</div>' +
+      '<div class="pista-caso"><b>Pista:</b> ' + esc(c.pista) + '</div>' +
+      '<div class="explica"><div><b style="color:var(--acento)">Por qué</b>' + c.por + '</div><div><b style="color:var(--ok)">Arreglo</b><pre>' + esc(c.fix) + '</pre></div></div>';
+    cierre.before(s);
+    let paso = 0;   // 0 = pregunta, 1 = pista, 2 = respuesta
+    const botones = () => s.querySelectorAll('.capas-opc button');
+    function pintar() {
+      s.querySelector('.pista-caso').classList.toggle('ve', paso === 1);
+      s.querySelector('.explica').classList.toggle('ve', paso >= 2);
+      botones().forEach(b => {
+        const k = +b.dataset.k;
+        b.classList.toggle('bien', paso >= 2 && k === c.capa);
+        b.classList.toggle('mal', paso >= 2 && k !== c.capa && b.classList.contains('elegida'));
+      });
+    }
+    // clic: marca (o desmarca) la opción más votada en el chat
+    botones().forEach(b => b.onclick = ev => {
+      ev.stopPropagation();
+      const ya = b.classList.contains('elegida');
+      botones().forEach(x => x.classList.remove('elegida'));
+      if (!ya) b.classList.add('elegida');
+      b.blur(); pintar();
+    });
+    HOOKS[s.id] = {
+      enter(dir) { paso = dir < 0 ? 2 : 0; pintar(); },
+      next() { if (paso >= 2) return false; paso++; pintar(); return true; },
+      prev() { if (paso <= 0) return false; paso--; pintar(); return true; }
+    };
+  });
+})();
+</script>
+
+<script>
+// =====================================================================
+// MOTOR DE DIAPOSITIVAS
+// =====================================================================
+(function () {
+  const lienzo = $('#lienzo');
+  const slides = $$('.slide');
+  let idx = 0;
+  function escalar() { const s = Math.min(innerWidth / 1600, innerHeight / 900); lienzo.style.transform = 'translate(-50%, -50%) scale(' + s + ')'; }
+  function ir(i, dir) {
+    i = Math.max(0, Math.min(slides.length - 1, i));
+    slides[idx].classList.remove('activa');
+    idx = i;
+    const s = slides[idx];
+    s.classList.add('activa');
+    const h = HOOKS[s.id]; if (h && h.enter) h.enter(dir || 1);
+    $('#barra').style.width = ((idx + 1) / slides.length * 100) + '%';
+    $('#navNum').textContent = (idx + 1) + ' / ' + slides.length;
+    try { history.replaceState(null, '', '#' + (idx + 1)); } catch (e) {}
+  }
+  function adelante() { const h = HOOKS[slides[idx].id]; if (h && h.next && h.next()) return; if (idx < slides.length - 1) ir(idx + 1, 1); }
+  function atras() { const h = HOOKS[slides[idx].id]; if (h && h.prev && h.prev()) return; if (idx > 0) ir(idx - 1, -1); }
+  document.addEventListener('keydown', e => {
+    if (e.target.tagName === 'INPUT') { if (e.key === 'Escape') e.target.blur(); return; }
+    const h = HOOKS[slides[idx].id];
+    if (['ArrowRight', 'PageDown', ' ', 'Enter'].includes(e.key)) { e.preventDefault(); adelante(); }
+    else if (['ArrowLeft', 'PageUp', 'Backspace'].includes(e.key)) { e.preventDefault(); atras(); }
+    else if (e.key === 'Home') ir(0, 1);
+    else if (e.key === 'End') ir(slides.length - 1, -1);
+    else if (e.key === 'f' || e.key === 'F') { if (!document.fullscreenElement) document.documentElement.requestFullscreen().catch(() => {}); else document.exitFullscreen(); }
+    else if (h && h.tecla) h.tecla(e.key);
+  });
+  $('#navAdelante').onclick = adelante; $('#navAtras').onclick = atras;
+  $('#navFull').onclick = () => { if (!document.fullscreenElement) document.documentElement.requestFullscreen().catch(() => {}); else document.exitFullscreen(); };
+  addEventListener('resize', escalar);
+  escalar();
+  const desde = parseInt((location.hash || '').slice(1), 10);
+  slides[0].classList.add('activa');
+  ir(desde >= 1 ? desde - 1 : 0, 1);
+})();
+</script>
+<script>
+// Boton "Borrar mis cambios": primer clic pide confirmacion, el segundo recarga desde la portada
+(function () {
+  var boton = document.getElementById('borrarTodo'), texto = boton.textContent, armado = false, espera;
+  boton.addEventListener('click', function (ev) {
+    ev.stopPropagation();
+    if (!armado) {
+      armado = true; boton.textContent = '¿Seguro? Tocá otra vez'; boton.classList.add('armado');
+      clearTimeout(espera);
+      espera = setTimeout(function () { armado = false; boton.textContent = texto; boton.classList.remove('armado'); }, 4000);
+      return;
+    }
+    try { sessionStorage.clear(); } catch (e) {}
+    location.replace(location.href.split('#')[0].split('?')[0]);
+  });
+})();
+</script>
+</body>
+</html>
